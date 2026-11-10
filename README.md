@@ -35,13 +35,6 @@ Typha 把这些工作放到同一个客户和项目上下文里：保留有来�
 
 目前售后反馈分析已提供可保存的报告模板；完整品牌预设包、报价／订单及研发管理仍属于后续范围。通用对象和字段保持可配置，后续可继续适配其他商品品类的工作方式。
 
-## 面试阅读路线
-
-- **从产品看工程取舍**：先打开产品导览，再看下面的小电商品牌场景。
-- **任务执行与恢复**：`server/agent-runs.ts`、`server/agent-execution.ts` 和相应测试。
-- **上下文与来源可信度**：`server/agent-context-plan.ts`、`server/agent-harness.ts`、`server/source-index.ts`。
-- **权限与确定性统计**：`server/security.ts`、`server/activity-analysis.ts`、`tests/activity-analysis-api.test.ts`。
-
 ## 核心功能
 
 - **管理客户资料**：集中查看公司、联系人、项目及其关联记录，支持可配置字段和表格／卡片视图；首页可查询本人负责或当前有权访问的客户。
