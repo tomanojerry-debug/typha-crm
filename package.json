@@ -17,7 +17,10 @@
     "test": "vitest run",
     "build": "npm run typecheck && vite build",
     "start": "node --import tsx scripts/start.ts",
-    "check": "npm run format:check && npm run test && npm run build"
+    "check": "npm run format:check && npm run test && npm run build",
+    "demo:build": "node demo/build.mjs",
+    "demo:fixtures": "node --import tsx demo/generate-fixture.ts",
+    "demo:test": "vitest run --config demo/vitest.config.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.14",

@@ -12,3 +12,4 @@ __pycache__/
 *.pyc
 test-results/
 playwright-report/
+.pages-build/

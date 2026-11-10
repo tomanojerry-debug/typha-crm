@@ -77,7 +77,7 @@ import {
   Table2,
   X,
 } from 'lucide-react';
-import { api, streamApi, HttpError } from './api';
+import { api, streamApi, HttpError, isDemoRuntime } from './api';
 import {
   customerTypes,
   customerStatuses,
@@ -208,7 +208,9 @@ export function HomeAgent(props: Props) {
     'unknown',
   );
   const modelReady =
-    modelConnection !== 'unavailable' && (capabilities?.model || modelConnection === 'connected');
+    !isDemoRuntime() &&
+    modelConnection !== 'unavailable' &&
+    (capabilities?.model || modelConnection === 'connected');
   const [evidence, setEvidence] = useState<AskEvidence | null>(null);
   const [pending, setPending] = useState<PendingMessage | null>(null);
   const [reconnecting, setReconnecting] = useState(false);
@@ -1744,21 +1746,25 @@ export function HomeAgent(props: Props) {
             <span
               className={`model-status${modelReady ? ' is-ready' : ''}`}
               title={
-                modelConnection === 'unavailable'
-                  ? 'AI 服务连接异常，请重试'
-                  : 'AI 服务由系统统一提供'
+                isDemoRuntime()
+                  ? '在线体验展示预设流程，不连接模型服务'
+                  : modelConnection === 'unavailable'
+                    ? 'AI 服务连接异常，请重试'
+                    : 'AI 服务由系统统一提供'
               }
             >
               <i />
-              {modelConnection === 'unavailable'
-                ? busy
-                  ? '正在重新连接'
-                  : 'AI 连接异常'
-                : modelReady
-                  ? 'M3.1 Flash'
-                  : capabilities
-                    ? 'AI 服务暂未就绪'
-                    : '连接服务中'}
+              {isDemoRuntime()
+                ? '示例流程 · 未连接模型'
+                : modelConnection === 'unavailable'
+                  ? busy
+                    ? '正在重新连接'
+                    : 'AI 连接异常'
+                  : modelReady
+                    ? 'M3.1 Flash'
+                    : capabilities
+                      ? 'AI 服务暂未就绪'
+                      : '连接服务中'}
             </span>
             <button
               className="send-message"

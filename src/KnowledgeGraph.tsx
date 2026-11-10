@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Focus, MessagesSquare, Network, RefreshCw, Search } from 'lucide-react';
-import { api } from './api';
+import { api, isDemoRuntime } from './api';
 import { RecordEvidence } from './RecordEvidence';
 import type { Customer, Project } from '../shared/domain';
 import type { KnowledgeGraphNode, KnowledgeGraphView } from '../shared/knowledge';
@@ -375,7 +375,13 @@ export function KnowledgeGraphWorkspace({ workspace }: { workspace: string }) {
           <p>查看实体、属性与关系，沿着来源核对沟通中的变化。</p>
         </div>
         <span className="graph-state">
-          {data ? states[data.state] : customerId ? '正在读取' : '选择客户后查看'}
+          {data
+            ? isDemoRuntime() && data.state === 'ready'
+              ? '示例图谱'
+              : states[data.state]
+            : customerId
+              ? '正在读取'
+              : '选择客户后查看'}
         </span>
       </div>
       <div className="graph-scope">
@@ -453,7 +459,7 @@ export function KnowledgeGraphWorkspace({ workspace }: { workspace: string }) {
         >
           <RefreshCw size={14} />
         </button>
-        {data?.can_sync && (
+        {data?.can_sync && !isDemoRuntime() && (
           <button disabled={busy || data.state === 'syncing'} onClick={() => void sync()}>
             {busy ? '正在提交…' : data.state === 'failed' ? '重试同步' : '同步最新资料'}
           </button>
@@ -789,7 +795,10 @@ export function KnowledgeGraphWorkspace({ workspace }: { workspace: string }) {
           </div>
           <div className="graph-footer">
             <span>
-              Graphiti 已保存节点与关系的真实回读 · {data.synced_at && date(data.synced_at)}
+              {isDemoRuntime()
+                ? '基于示例资料准备的知识关系 · 非实时索引运行'
+                : 'Graphiti 已保存节点与关系的真实回读'}{' '}
+              · {data.synced_at && date(data.synced_at)}
             </span>
             <span>候选与原文共用 Record 来源，需核对后更新正式档案。</span>
           </div>

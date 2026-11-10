@@ -1,5 +1,10 @@
 import { SseFrames } from '../shared/sse';
 
+// The separately built public experience replaces this module with a local adapter.
+export function isDemoRuntime(): boolean {
+  return false;
+}
+
 export class HttpError extends Error {
   constructor(
     message: string,

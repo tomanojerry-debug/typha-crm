@@ -2,11 +2,7 @@
 
 **把客户沟通，变成有依据的下一步行动。**
 
-[产品导览](https://tomanojerry-debug.github.io/typha-crm/) · [本机运行](docs/getting-started.md) · [工程设计](docs/architecture.md) · [测试说明](docs/evaluation.md)
-
-![虚构数据下的售后反馈报告](site/assets/feedback.jpg)
-
-在线导览展示真实界面的虚构样例与预设流程，无需登录或模型密钥。完整 CRM 需在自己的 Node.js 环境中运行。
+[在线体验](https://tomanojerry-debug.github.io/typha-crm/) · [产品介绍](https://tomanojerry-debug.github.io/typha-crm/about.html) · [本机部署](docs/getting-started.md) · [技术架构](docs/architecture.md)
 
 Typha 是面向小型电商品牌与客户沟通团队的 AI CRM。它将已关联的邮件、文档和业务笔记组织到公司、联系人和项目下，帮助你跟进咨询、准备回复，并把客户反馈留给后续产品改进。
 
@@ -45,6 +41,22 @@ Typha 把这些工作放到同一个客户和项目上下文里：保留有来�
 - **持续处理任务**：对话任务支持多轮补充或修改条件，切页后继续运行，回来恢复结果，也可明确停止。
 - **记录与跟进**：使用笔记、活动、待办和报告，查看客户沟通及业务进展。
 - **分析产品反馈**：将已有活动字段映射为款式、问题及可选版本、尺码等维度，查看去重统计、筛选明细和原话来源，保存本人看板并导出当前页 CSV。
+
+## 在线体验与 AI 辅助
+
+在线体验直接运行产品的实际前端界面，无需安装。可以搜索和查看客户档案、修改示例资料、处理待办，并筛选售后反馈报告。体验空间使用示例数据，操作仅保留在当前页面；AI流程展示准备好的示例，不调用真实模型或发送邮件。连接自己的资料与模型服务，请在本机运行完整应用。
+
+下图来自产品实际界面，使用与真实业务隔离的示例资料及准备好的流程。点击图片可查看大图。
+
+| 沟通总结与依据                                                                    | 客户资料整理建议                                                                  |
+| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [![沟通总结与依据](site/assets/agent-summary.png)](site/assets/agent-summary.png) | [![客户资料整理建议](site/assets/agent-update.png)](site/assets/agent-update.png) |
+| 明确客户、资料范围与待确认事项，引用信息可回到原文。                              | 对照已有字段与修改建议，核对后再保存业务资料。                                    |
+
+| 记忆偏好                                                                  | 客户知识图谱                                                                |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [![记忆偏好](site/assets/agent-memory.png)](site/assets/agent-memory.png) | [![客户知识图谱](site/assets/agent-graph.png)](site/assets/agent-graph.png) |
+| 明确保存个人沟通习惯，查看来源并自行管理。                                | 浏览实体、候选主张与关系，沿来源核对业务原话。                              |
 
 ## 一次典型使用
 
@@ -111,7 +123,7 @@ flowchart TB
 | 知识检索     | Python 桥接 Graphiti 与本机 FalkorDBLite；FastEmbed / MiniLM 在本机生成384维向量。            |
 | 后台任务     | 同一 Node.js 服务内运行收信、已确认邮件发送、文档处理与索引任务；各自沿用对应配置和状态。     |
 
-模型名称和接入方式按当前实现与配置说明区分；通用模型适配及企业自有 API 配置入口仍在完善。Graphiti 的 Python 依赖和嵌入模型需要另行准备，当前本机知识组件的验证以 macOS 为主。界面正文还引用 Google Fonts 的 DM Sans／Noto Sans SC；标题字体随包提供，Pages导览使用系统字体。详细设计见[技术架构](docs/architecture.md)与[知识组件配置](docs/knowledge.md)。
+模型名称和接入方式按当前实现与配置说明区分；通用模型适配及企业自有 API 配置入口仍在完善。Graphiti 的 Python 依赖和嵌入模型需要另行准备，当前本机知识组件的验证以 macOS 为主。界面正文还引用 Google Fonts 的 DM Sans／Noto Sans SC；标题字体随包提供，在线体验使用随包字体与系统回退字体。详细设计见[技术架构](docs/architecture.md)与[知识组件配置](docs/knowledge.md)。
 
 ## 项目结构
 
@@ -302,7 +314,7 @@ npm test
 npm run build
 ```
 
-首次安装、虚构示例与启动步骤见[本机运行](docs/getting-started.md)。`setup` 用于初始化新环境；`npm start` 进入生产模式并要求 HTTPS 配置。GitHub Pages 仅发布产品导览，完整CRM运行在企业自己的环境。
+首次安装、虚构示例与启动步骤见[本机运行](docs/getting-started.md)。`setup` 用于初始化新环境；`npm start` 进入生产模式并要求 HTTPS 配置。GitHub Pages 发布浏览器内的产品体验，完整CRM运行在企业自己的环境。
 
 工程回归、真实模型试跑和业务语义评测分别记录，见[产品评测说明](docs/evaluation.md)。
 
@@ -314,4 +326,4 @@ npm run build
 
 ## 许可证
 
-项目代码采用 [MIT](LICENSE)。第三方字体与组件保留各自的许可和版权声明，详见 [NOTICE](NOTICE)。演示页面和截图均使用虚构数据，项目不包含企业真实资料或访问凭据。
+项目代码采用 [MIT](LICENSE)。第三方字体与组件保留各自的许可和版权声明，详见 [NOTICE](NOTICE)。在线体验使用与真实业务隔离的示例数据，项目不包含企业真实资料或访问凭据。

@@ -1,0 +1,152 @@
+.demo-experience {
+  --demo-toolbar-height: 48px;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+.demo-toolbar {
+  height: var(--demo-toolbar-height);
+  flex: 0 0 var(--demo-toolbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 18px;
+  color: #555d70;
+  background: #f6f8fe;
+  border-bottom: 1px solid #dfe5f2;
+}
+.demo-toolbar-copy,
+.demo-toolbar nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.demo-toolbar-copy strong {
+  color: #425b9b;
+  font-weight: 600;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.demo-toolbar-copy span {
+  font-size: 11px;
+  color: #7b8393;
+}
+.demo-toolbar button,
+.demo-toolbar a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 4px 7px;
+  color: #60697e;
+  font-size: 11px;
+  border: 0;
+  background: transparent;
+  text-decoration: none;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+.demo-toolbar button:hover,
+.demo-toolbar a:hover {
+  background: #e8edf8;
+  color: #354b83;
+}
+.demo-toolbar .demo-install {
+  background: #fff;
+  border: 1px solid #dce3f0;
+  padding: 5px 10px;
+}
+.demo-product {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+:root #root .demo-product .shell.attio-shell {
+  height: 100%;
+  min-height: 0;
+}
+.demo-help {
+  width: min(540px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+  padding: 24px;
+  color: #373e4f;
+  border: 1px solid #e3e6ec;
+  border-radius: 12px;
+  box-shadow: 0 18px 80px #18294325;
+}
+.demo-help::backdrop {
+  background: #18233850;
+}
+.demo-help header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.demo-help h2 {
+  margin: 0;
+  font-size: 19px;
+}
+.demo-help header button {
+  border: 0;
+  background: none;
+  padding: 5px;
+}
+.demo-help p,
+.demo-help li {
+  font-size: 13px;
+  line-height: 1.9;
+}
+.demo-help ol {
+  padding-left: 20px;
+}
+.demo-help li {
+  margin: 12px 0;
+}
+.demo-help .demo-help-note {
+  background: #f6f7fa;
+  padding: 12px;
+  border-radius: 7px;
+  color: #707887;
+  font-size: 12px;
+}
+.demo-help-start {
+  display: block;
+  margin: 18px 0 0 auto;
+  padding: 8px 14px;
+  color: #fff;
+  background: #4b64ab;
+  border: 0;
+  border-radius: 6px;
+}
+@media (max-width: 700px) {
+  .demo-toolbar {
+    padding: 0 10px;
+    gap: 5px;
+  }
+  .demo-toolbar-copy span {
+    display: none;
+  }
+  .demo-toolbar nav {
+    gap: 1px;
+  }
+  .demo-toolbar button,
+  .demo-toolbar a {
+    padding: 4px 5px;
+    font-size: 10px;
+  }
+  .demo-toolbar button span {
+    display: none;
+  }
+  .demo-toolbar button {
+    min-width: 30px;
+  }
+  :root #root .demo-product .sidebar {
+    top: var(--demo-toolbar-height);
+    height: calc(100dvh - var(--demo-toolbar-height));
+  }
+}

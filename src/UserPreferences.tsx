@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Brain, MessageSquare, Pencil, Settings2, Trash2 } from 'lucide-react';
 import { userPreferenceOptions, type UserPreferenceSetting } from '../shared/user-preferences';
-import { api, HttpError } from './api';
+import { api, HttpError, isDemoRuntime } from './api';
 import { Dialog } from './WorkspaceUI';
 import { ActivitySettings } from './ActivitySettings';
 
@@ -119,7 +119,11 @@ export function UserPreferences({
       setPreferences((items) => items.map((item) => (item.id === updated.id ? updated : item)));
       setEdit(null);
       setPendingAction(null);
-      setNotice('偏好已更新，后续回答将使用新偏好。');
+      setNotice(
+        isDemoRuntime()
+          ? '示例偏好已更新，仅在当前页面保留。'
+          : '偏好已更新，后续回答将使用新偏好。',
+      );
     } catch (error) {
       if (!controller.signal.aborted)
         setActionError({
@@ -147,7 +151,11 @@ export function UserPreferences({
       });
       setPreferences((items) => items.filter((item) => item.id !== id));
       if (edit?.id === id) setEdit(null);
-      setNotice('偏好已删除，后续回答将不再使用这条偏好。');
+      setNotice(
+        isDemoRuntime()
+          ? '示例偏好已删除，重置后恢复。'
+          : '偏好已删除，后续回答将不再使用这条偏好。',
+      );
     } catch (error) {
       if (!controller.signal.aborted) setActionError({ id, message: errorText(error) });
     } finally {

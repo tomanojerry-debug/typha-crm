@@ -19,7 +19,7 @@ import {
   runFailure,
   submitAgentRun,
 } from './agent-runs-client';
-import { api, HttpError, streamApi } from './api';
+import { api, HttpError, streamApi, isDemoRuntime } from './api';
 import { Dialog } from './WorkspaceUI';
 import { AgentAnswer } from './AgentAnswer';
 import { AgentReplySources } from './AgentReplyCards';
@@ -690,9 +690,11 @@ export function AskTyphaPanel({
           </div>
         </form>
         <p>
-          {context?.model
-            ? 'MiniMax M3.1 Flash · 回答请核对来源'
-            : 'AI 服务暂未就绪 · 当前为本地查询'}
+          {isDemoRuntime()
+            ? '示例空间 · 在线体验不调用模型服务'
+            : context?.model
+              ? 'MiniMax M3.1 Flash · 回答请核对来源'
+              : 'AI 服务暂未就绪 · 当前为本地查询'}
         </p>
       </footer>
       {evidence && (
