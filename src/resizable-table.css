@@ -1,0 +1,190 @@
+/* Explicit col widths make dragging independent of the text in other rows. */
+table.resizable-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+table.resizable-table th,
+table.resizable-table td {
+  min-width: 0 !important;
+  max-width: none !important;
+  width: auto !important;
+}
+table.resizable-table th {
+  position: relative;
+  overflow: visible;
+}
+table.resizable-table th > .popover {
+  min-width: 0;
+  width: 100%;
+}
+table.resizable-table th > .popover > summary {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding-right: 14px;
+}
+table.resizable-table th > .popover > summary > svg {
+  flex-shrink: 0;
+}
+.column-resize-handle {
+  position: absolute;
+  right: -4px;
+  top: 0;
+  bottom: 0;
+  width: 9px;
+  z-index: 5;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+  outline-offset: -2px;
+}
+.column-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 4px;
+  width: 1px;
+  background: #d5dae3;
+  opacity: 0;
+}
+.column-resize-handle:focus-visible {
+  outline: 1px solid #a4adba;
+}
+.column-resize-handle:hover::after,
+.column-resize-handle:focus-visible::after,
+.column-resize-handle.resizing::after {
+  opacity: 1;
+  width: 2px;
+  background: #8d99ae;
+}
+body.table-column-resizing,
+body.table-column-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+.resizable-table .expandable-cell {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+.resizable-table .table-cell-content {
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.resizable-table .table-cell-content > * {
+  max-width: 100%;
+  min-width: 0;
+}
+.resizable-table .table-cell-content button:not(.preview-button) {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.resizable-table .table-link,
+.resizable-table .attribute-value {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+.resizable-table .record-name-cell > .record-name {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+.resizable-table .record-name-cell > .preview-button {
+  flex-shrink: 0;
+}
+.resizable-table .table-cell-content .wf-static {
+  max-width: 100%;
+}
+.resizable-table .has-overflow .table-cell-content {
+  cursor: zoom-in;
+}
+.resizable-table .cell-expand-button {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  min-height: 22px;
+  width: 22px;
+  padding: 3px;
+  border: 0;
+  border-radius: 3px;
+  background: #f7f8fa;
+  color: #7c889a;
+  opacity: 0;
+  pointer-events: none;
+}
+.resizable-table td:hover .cell-expand-button,
+.resizable-table .expandable-cell:focus-within .cell-expand-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+.resizable-table .has-overflow:focus-visible {
+  outline: 1px solid #a4adba;
+  outline-offset: 2px;
+}
+.resizable-table .wf-record-name > span:first-of-type {
+  min-width: 0;
+  flex: 1;
+}
+.resizable-table .wf-record-name .wf-open {
+  flex-shrink: 0;
+}
+.cell-value-popover {
+  position: fixed;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dfe3e9;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 9px 28px #26324822;
+  outline: none;
+}
+.cell-value-popover > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid #eef0f3;
+}
+.cell-value-popover > header strong {
+  font-size: 11px;
+  color: #7e8794;
+  font-weight: 500;
+}
+.cell-value-popover > pre {
+  margin: 0;
+  padding: 14px;
+  overflow: auto;
+  min-height: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.75;
+  user-select: text;
+}
+.cell-value-popover > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 11px;
+  border-top: 1px solid #eef0f3;
+}
+.cell-value-popover > footer button {
+  font-size: 11px;
+  min-height: 26px;
+  padding: 4px 8px;
+}

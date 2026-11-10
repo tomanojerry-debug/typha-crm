@@ -1,0 +1,502 @@
+/* Neutral component layer. Record content, status semantics and order belong
+   to the existing components; these rules only change their presentation. */
+.attio-shell {
+  --neutral-card-surface: #ffffff;
+  --neutral-card-shell: #f6f6f9;
+  --neutral-card-frame: #e3e3e9;
+  --neutral-card-inset: #e8e8ee;
+  --neutral-card-ink: #33333c;
+  --neutral-card-muted: #74747e;
+  --neutral-card-shell-muted: #70707b;
+  --neutral-card-shadow: 0 1px 2px #29293604, 0 6px 14px #29293607;
+  --neutral-shell-shadow: 0 2px 3px #29293604, 0 8px 18px #29293608;
+}
+
+/* The same record card is shared by companies, people, projects and lists,
+   including the existing custom-record-cards grid. */
+:root .attio-shell .kanban-board {
+  grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr));
+  gap: 18px;
+}
+
+:root .attio-shell :is(.customer-card, .kanban-card) {
+  padding: 4px;
+  color: var(--neutral-card-ink);
+  border: 1px solid var(--neutral-card-frame);
+  border-radius: 18px;
+  background: var(--neutral-card-shell);
+  box-shadow: var(--neutral-shell-shadow);
+}
+
+:root .attio-shell :is(.customer-card:hover, .kanban-card:hover, .kanban-card:focus-within) {
+  border-color: #cdcdd7;
+  background: var(--neutral-card-shell);
+  box-shadow:
+    0 3px 5px #29293605,
+    0 10px 22px #2929360b;
+}
+
+:root .attio-shell :is(.customer-card.selected, .kanban-card.is-selected) {
+  border-color: var(--theme-accent);
+  background: var(--neutral-card-shell);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--theme-accent) 22%, transparent),
+    var(--neutral-shell-shadow);
+}
+
+:root .attio-shell :is(.kanban-card-title, .kanban-card-title:hover, .card-identity strong) {
+  color: var(--neutral-card-ink);
+  background: transparent;
+}
+
+:root .attio-shell .kanban-card-title {
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 10px 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+:root .attio-shell .kanban-card-identity {
+  flex-basis: 32px;
+  width: 32px;
+  height: 32px;
+  color: #767680;
+  border-color: #e3e3e9;
+  border-radius: 9px;
+  background: var(--neutral-card-surface);
+  box-shadow: inset 0 1px 0 #ffffff;
+}
+
+:root .attio-shell .custom-card-heading {
+  gap: 8px;
+  padding-left: 10px;
+}
+
+:root .attio-shell .custom-card-heading .kanban-card-title {
+  padding-left: 0;
+}
+
+/* Existing fields form the white inset; the real title/footer stay outside. */
+:root .attio-shell .kanban-card-fields {
+  gap: 12px;
+  margin-top: 3px;
+  padding: 15px 13px;
+  border: 1px solid var(--neutral-card-inset);
+  border-radius: 16px;
+  background: var(--neutral-card-surface);
+  box-shadow: 0 1px 1px #30303703;
+}
+
+:root .attio-shell .kanban-card-fields:empty {
+  display: none;
+}
+
+:root .attio-shell .kanban-card-field {
+  grid-template-columns: minmax(84px, 0.85fr) minmax(0, 1.25fr);
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+:root .attio-shell .kanban-card-field > span {
+  color: var(--neutral-card-muted);
+}
+
+:root .attio-shell .kanban-card-field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+:root .attio-shell .kanban-card-field-label > svg {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  color: #85858f;
+  stroke-width: 1.5;
+}
+
+:root .attio-shell .kanban-card-field-label > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:root .attio-shell :is(.card-contact, .card-owner, .card-projects) {
+  color: var(--neutral-card-shell-muted);
+}
+
+:root .attio-shell .kanban-card-field > div {
+  color: #46464f;
+  font-size: 14px;
+  text-align: left;
+}
+
+:root .attio-shell .record-card-value {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+:root .attio-shell .kanban-card-field > .record-card-value.is-email {
+  font-size: 13px;
+}
+
+/* A compact capsule belongs to a real enum/relation, never to an inferred
+   status. The existing value/editor/AI controls remain the children. */
+:root .attio-shell .record-card-value:is(.is-enum, .is-relation) {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: fit-content;
+  min-height: 24px;
+  padding: 1px 6px;
+  border: 1px solid #e8e9ee;
+  border-radius: 999px;
+  color: #626572;
+  background: #f0f1f5;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+:root .attio-shell .record-card-value.is-relation {
+  color: #656570;
+  border-color: #dedee6;
+  background: var(--neutral-card-surface);
+}
+
+:root .attio-shell .record-card-value.is-enum[data-tone='blue'] {
+  color: #526990;
+  border-color: #e2eaf8;
+  background: #ebf1fa;
+}
+
+:root .attio-shell .record-card-value.is-enum[data-tone='purple'] {
+  color: #705e94;
+  border-color: #e9e4f4;
+  background: #f0edf8;
+}
+
+:root .attio-shell .record-card-value.is-enum[data-tone='amber'] {
+  color: #89653b;
+  border-color: #f6ebd9;
+  background: #fbf3e8;
+}
+
+:root .attio-shell .record-card-value.is-enum[data-tone='teal'] {
+  color: #4b705e;
+  border-color: #ddede4;
+  background: #eaf4ee;
+}
+
+:root .attio-shell .record-card-value.is-empty {
+  color: var(--neutral-card-muted);
+}
+
+:root .attio-shell .record-card-value.is-empty :is(.missing, .muted) {
+  color: var(--neutral-card-muted);
+}
+
+/* Existing type labels already provide text; the outer enum owns the single
+   capsule surface. Real stage dots and AI controls keep their own styling. */
+:root .attio-shell .record-card-value.is-enum .record-type-label {
+  padding: 0;
+  color: inherit;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+}
+
+:root
+  .attio-shell
+  .record-card-value:is(.is-enum, .is-relation)
+  :is(.attribute-value, .table-link, .record-name, .customer-link) {
+  min-height: 0;
+  padding: 0;
+  color: inherit;
+  border-color: transparent;
+  background: transparent;
+  font: inherit;
+  line-height: inherit;
+}
+
+:root .attio-shell .kanban-card-field .attribute-value {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+:root .attio-shell .kanban-card-field .custom-ai-value {
+  justify-content: flex-start;
+}
+
+:root .attio-shell .kanban-card-field .email-address {
+  flex-wrap: wrap;
+}
+
+:root .attio-shell .kanban-card-field .email-address-link {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
+:root .attio-shell .kanban-card-footer {
+  min-height: 45px;
+  margin-top: 0;
+  padding: 6px 10px 4px;
+  color: var(--neutral-card-shell-muted);
+  border-top: 0;
+  font-size: 12px;
+}
+
+:root .attio-shell .kanban-card-footer :is(select, button) {
+  min-height: 35px;
+  color: #595962;
+  border-color: #dedee6;
+  border-radius: 7px;
+  background: var(--neutral-card-surface);
+  box-shadow: inset 0 1px 0 #ffffff;
+  font-size: 12px;
+}
+
+:root .attio-shell .custom-record-cards .kanban-card-footer .text-button {
+  min-height: 35px;
+  padding-inline: 7px;
+  border: 1px solid #dedee6;
+  font-size: 12px;
+}
+
+:root .attio-shell .kanban-empty {
+  color: var(--neutral-card-muted);
+  border-color: var(--neutral-card-frame);
+  border-radius: 10px;
+}
+
+/* Keep the existing three task actions compact, with the same touch targets. */
+:root .attio-shell .agent-shortcuts > button {
+  color: #55555f;
+  border-color: var(--neutral-card-frame);
+  border-radius: 8px;
+  background: var(--neutral-card-surface);
+  box-shadow:
+    inset 0 0 0 2px #fafafc,
+    0 1px 2px #30303704;
+}
+
+:root .attio-shell .agent-shortcuts > button > svg {
+  color: #787380;
+}
+
+:root .attio-shell .agent-shortcuts > button:hover:not(:disabled),
+:root .attio-shell .agent-shortcuts > button:active:not(:disabled) {
+  color: var(--neutral-card-ink);
+  border-color: #c8c8d4;
+  background: #fafafc;
+}
+
+/* Real Home information sits on white insets within the same cool-grey shell.
+   The existing sequence, labels and action targets are unchanged. */
+:root .attio-shell :is(.home-overview-list > li, .home-recent-project-list > li) {
+  margin-block: 10px;
+  color: var(--neutral-card-ink);
+  border: 1px solid var(--neutral-card-frame);
+  border-radius: 18px;
+  background: var(--neutral-card-shell);
+  box-shadow: var(--neutral-shell-shadow);
+}
+
+:root .attio-shell .home-overview-list > li {
+  gap: 10px;
+  padding: 7px;
+}
+
+:root .attio-shell .home-overview-item-text {
+  align-self: stretch;
+  padding: 10px 12px;
+  border: 1px solid var(--neutral-card-inset);
+  border-radius: 14px;
+  background: var(--neutral-card-surface);
+}
+
+:root .attio-shell .home-overview-item-text > strong {
+  font-size: 13px;
+}
+
+:root .attio-shell .home-overview-item-text > p {
+  font-size: 12px;
+}
+
+:root .attio-shell .home-overview-list > li > button {
+  min-height: 35px;
+  margin-right: 3px;
+  border-radius: 7px;
+}
+
+:root .attio-shell .home-recent-project-list > li {
+  padding: 5px;
+}
+
+:root .attio-shell .home-recent-project-list > li > button {
+  min-height: 66px;
+  padding: 12px;
+  color: var(--neutral-card-ink);
+  border: 1px solid var(--neutral-card-inset);
+  border-radius: 14px;
+  background: var(--neutral-card-surface);
+}
+
+:root .attio-shell .home-recent-project-list > li > button:hover:not(:disabled) {
+  border-color: #d7d7e0;
+  background: var(--neutral-card-surface);
+  box-shadow: 0 2px 6px #29293605;
+}
+
+:root .attio-shell .home-recent-project-name > strong {
+  font-size: 14px;
+}
+
+:root .attio-shell .home-recent-project-name > small,
+:root .attio-shell .home-recent-project-list time {
+  font-size: 12px;
+}
+
+:root
+  .attio-shell
+  :is(
+    .home-work-overview h2,
+    .home-recent-projects h2,
+    .home-overview-item-text > strong,
+    .home-recent-project-name > strong
+  ) {
+  color: var(--neutral-card-ink);
+}
+
+:root
+  .attio-shell
+  :is(
+    .home-work-overview > header > span,
+    .home-overview-item-text > p,
+    .home-recent-project-name > small,
+    .home-recent-project-list time
+  ) {
+  color: var(--neutral-card-muted);
+}
+
+:root .attio-shell .home-overview-list > li > svg:not(.home-overview-caution),
+:root .attio-shell .home-recent-project-list > li > button > svg {
+  color: #787380;
+}
+
+/* Agent cards use the same surfaces while keeping their source text and
+   existing operation footer intact. */
+:root .attio-shell .agent-reply-card {
+  color: var(--neutral-card-ink);
+  border-color: var(--neutral-card-frame);
+  border-radius: 18px;
+  background: var(--neutral-card-shell);
+  box-shadow: var(--neutral-card-shadow);
+}
+
+:root .attio-shell .agent-card-heading {
+  padding: 14px;
+  background: transparent;
+}
+
+:root .attio-shell .agent-card-avatar {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+  color: #767680;
+  border: 1px solid var(--neutral-card-inset);
+  border-radius: 9px;
+  background: var(--neutral-card-surface);
+}
+
+:root .attio-shell .agent-card-body {
+  margin: 0 4px 4px;
+  padding: 14px 12px;
+  border: 1px solid var(--neutral-card-inset);
+  border-radius: 16px;
+  background: var(--neutral-card-surface);
+}
+
+:root .attio-shell .agent-card-fields {
+  gap: 12px;
+}
+
+:root .attio-shell .agent-card-fields dt {
+  color: var(--neutral-card-muted);
+  font-size: 13px;
+}
+
+:root .attio-shell .agent-card-fields dd {
+  color: var(--neutral-card-ink);
+  font-size: 14px;
+}
+
+:root .attio-shell .agent-card-footer {
+  min-height: 45px;
+  padding: 7px 12px;
+  border-top: 0;
+  background: var(--neutral-card-shell);
+}
+
+:root .attio-shell .agent-card-action {
+  min-height: 35px;
+}
+
+/* Existing warning/error/status colors are deliberately left to their owners. */
+:root .attio-shell :is(.customer-card:focus-visible, .agent-shortcuts > button:focus-visible),
+:root .attio-shell .kanban-board :is(button, select):focus-visible,
+:root .attio-shell .home-recent-project-list > li > button:focus-visible {
+  outline-color: var(--theme-accent);
+}
+
+@media (max-width: 640px) {
+  :root .attio-shell .kanban-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  :root .attio-shell .home-overview-list > li {
+    gap: 7px;
+    padding: 5px;
+  }
+
+  :root .attio-shell .home-overview-item-text {
+    padding: 9px;
+  }
+
+  :root .attio-shell .home-overview-list > li > button {
+    padding-inline: 7px;
+  }
+
+  :root .attio-shell .kanban-card-field {
+    grid-template-columns: minmax(80px, 0.85fr) minmax(0, 1.25fr);
+    gap: 10px;
+  }
+}
+
+@media (pointer: coarse) {
+  :root
+    .attio-shell
+    :is(
+      .kanban-card-footer button,
+      .kanban-card-footer select,
+      .home-overview-list > li > button,
+      .agent-card-action
+    ),
+  :root .attio-shell .custom-record-cards .kanban-card-footer .text-button {
+    min-height: 44px;
+  }
+}

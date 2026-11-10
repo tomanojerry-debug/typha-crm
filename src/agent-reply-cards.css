@@ -1,0 +1,272 @@
+.agent-reply-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 560px;
+  min-width: 0;
+  border: 1px solid #e3e6ed;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  color: #353a44;
+  white-space: normal;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.agent-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 17px;
+}
+.agent-card-avatar {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #f5f6f8;
+  color: #7b8392;
+}
+.agent-card-identity {
+  min-width: 0;
+}
+.agent-card-initial {
+  font-size: 15px;
+}
+.agent-card-identity strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 550;
+  color: #353a44;
+  overflow-wrap: anywhere;
+}
+.agent-card-identity > span {
+  display: block;
+  margin-top: 2px;
+  color: #6b7280;
+  font-size: 12px;
+}
+.agent-card-body {
+  min-width: 0;
+  padding: 0 17px 18px;
+}
+.agent-card-fields {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.agent-card-fields > div {
+  display: grid;
+  grid-template-columns: minmax(64px, 100px) minmax(0, 1fr);
+  gap: 12px;
+}
+.agent-card-fields dt {
+  color: #6b7280;
+  font-weight: 400;
+}
+.agent-card-fields dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.agent-card-description {
+  margin: 0;
+  color: #6b7280;
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.agent-card-description:not(:first-child) {
+  margin-top: 10px;
+}
+.agent-card-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 11px 17px;
+  border-top: 1px solid #e3e6ed;
+  background: #f6f7f9;
+}
+.agent-card-provenance {
+  min-width: 0;
+  color: #6b7280;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.agent-card-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-left: auto;
+  min-width: 0;
+}
+.agent-card-state {
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: #e9edf3;
+  color: #656d7b;
+  font-size: 12px;
+}
+.agent-card-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 32px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #dde2eb;
+  border-radius: 7px;
+  background: #fff;
+  color: #656d7b;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: normal;
+  text-align: left;
+}
+.agent-card-action svg {
+  flex-shrink: 0;
+}
+.agent-card-action:hover:not(:disabled) {
+  background: #f0f2f6;
+  border-color: #ced5e3;
+}
+.agent-card-action.is-primary {
+  border-color: #3e53b8;
+  background: #3e53b8;
+  color: #fff;
+}
+.agent-card-action.is-primary:hover:not(:disabled) {
+  border-color: #3449a7;
+  background: #3449a7;
+}
+.agent-card-action.is-secondary {
+  background: transparent;
+  border-color: transparent;
+}
+.agent-card-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.agent-reply-card-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 12px;
+  min-width: 0;
+}
+.agent-reply-card-list > .agent-reply-card {
+  flex: 1 1 280px;
+}
+.agent-card-body .agent-answer {
+  font-size: inherit;
+  line-height: 1.8;
+}
+.agent-card-body .agent-answer-fields {
+  display: grid;
+  gap: 7px;
+  margin: 0 0 13px;
+}
+.agent-card-body .agent-answer-fields > div {
+  display: grid;
+  grid-template-columns: minmax(64px, 100px) minmax(0, 1fr);
+  gap: 12px;
+}
+.agent-card-body .agent-answer-fields dt {
+  color: #6b7280;
+}
+.agent-card-body .agent-answer-fields dd {
+  margin: 0;
+  min-width: 0;
+}
+.agent-reply-sources {
+  margin-top: 16px;
+}
+.agent-reply-sources > summary {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.6;
+  list-style: none;
+  cursor: pointer;
+}
+.agent-reply-sources > summary::-webkit-details-marker {
+  display: none;
+}
+.agent-reply-sources[open] > summary > svg {
+  transform: rotate(90deg);
+}
+.agent-reply-sources > .agent-reply-card-list {
+  margin-top: 9px;
+}
+.agent-candidate-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 14px;
+  color: #6b7280;
+  font-size: 13px;
+}
+.agent-candidate-limit {
+  flex-basis: 100%;
+  margin-left: 22px;
+  color: #6b7280;
+  font-size: 12px;
+}
+.agent-reply-card.is-wide {
+  max-width: none;
+}
+.agent-reply-card.is-wide .agent-card-body {
+  padding: 0;
+}
+.agent-reply-card.is-wide .agent-card-description {
+  padding: 0 17px 16px;
+}
+.agent-reply-entry {
+  margin: 16px 0;
+}
+.agent-reply-entry.is-upload {
+  width: calc(100% - 72px);
+  max-width: 700px;
+  margin: 12px auto;
+}
+.agent-reply-entry.is-upload > .agent-reply-card {
+  max-width: none;
+}
+@media (max-width: 700px) {
+  .agent-reply-entry.is-upload {
+    width: calc(100% - 28px);
+  }
+}
+@media (max-width: 480px) {
+  .agent-card-heading {
+    padding: 16px 14px;
+  }
+  .agent-card-body {
+    padding: 0 14px 16px;
+  }
+  .agent-card-footer {
+    padding: 10px 14px;
+  }
+  .agent-card-action {
+    min-height: 38px;
+  }
+}
+@media (pointer: coarse) {
+  .agent-card-action,
+  .agent-reply-sources > summary {
+    min-height: 44px;
+  }
+}

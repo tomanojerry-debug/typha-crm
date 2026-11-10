@@ -1,0 +1,116 @@
+.associated-projects {
+  margin: 16px 0;
+  padding: 0 0 16px;
+  border-bottom: 1px solid #edf0f3;
+}
+.associated-projects > summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  list-style: none;
+  color: #56606d;
+  font-size: 12px;
+}
+.associated-projects > summary::-webkit-details-marker {
+  display: none;
+}
+.associated-projects > summary > strong {
+  font-weight: 600;
+}
+.associated-projects:not([open]) > summary > svg {
+  transform: rotate(-90deg);
+}
+.associated-project-count {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #f2f3f6;
+  color: #858e9a;
+  font-size: 10px;
+}
+.associated-project-list {
+  display: grid;
+  gap: 3px;
+  margin-top: 9px;
+}
+.associated-project-link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  padding: 8px 5px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+  color: #65738d;
+  border-radius: 5px;
+}
+.associated-project-link:hover {
+  background: #f6f7fa;
+}
+.associated-project-link > svg {
+  flex: 0 0 auto;
+}
+.associated-project-link > span {
+  flex: 1;
+  min-width: 0;
+}
+.associated-project-link strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4c5666;
+}
+.associated-project-link small {
+  display: block;
+  margin-top: 4px;
+  color: #969ca6;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.associated-project-empty {
+  margin: 13px 0;
+  font-size: 12px;
+  color: #a0a6af;
+}
+.associated-project-error {
+  font-size: 12px;
+  color: #a84e4e;
+}
+.associated-project-error button,
+.associated-project-manage {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: 5px 0;
+  font-size: 11px;
+  color: #8a93a1;
+}
+.associated-project-manage {
+  margin-top: 8px;
+}
+.associated-project-manage:hover {
+  color: #526a9c;
+}
+.associated-project-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: #9299a4;
+}
+.associated-project-pagination .icon-button {
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+}

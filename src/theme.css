@@ -1,0 +1,544 @@
+/* Happy Hues #8: https://www.happyhues.co/palettes/8
+   Color-only theme, with a deeper warm navigation surface. Component geometry
+   and business status colors stay in their original stylesheets. */
+:root,
+.attio-shell {
+  --theme-page: #f8f5f2;
+  --theme-sidebar: #efede9;
+  --theme-surface: #fffffe;
+  --theme-heading: #232323;
+  --theme-body: #222525;
+  --theme-accent: #078080;
+  --theme-coral: #f45d48;
+  --theme-warm: #feefe8;
+  --theme-muted: color-mix(in srgb, var(--theme-body) 70%, var(--theme-page));
+  --theme-line: color-mix(in srgb, var(--theme-heading) 12%, var(--theme-page));
+  --theme-line-strong: color-mix(in srgb, var(--theme-heading) 24%, var(--theme-page));
+  --theme-neutral: color-mix(in srgb, var(--theme-heading) 4%, var(--theme-page));
+  --theme-selected: color-mix(in srgb, var(--theme-accent) 9%, var(--theme-surface));
+  --theme-hover: color-mix(in srgb, var(--theme-accent) 5%, var(--theme-surface));
+  --theme-accent-hover: color-mix(in srgb, var(--theme-accent) 88%, var(--theme-heading));
+  --ink: var(--theme-heading);
+  --muted: var(--theme-muted);
+  --line: var(--theme-line);
+  --soft: var(--theme-neutral);
+  --accent: var(--theme-accent);
+  --focus-border: var(--theme-accent);
+  color-scheme: light;
+  color: var(--theme-body);
+  background-color: var(--theme-page);
+}
+
+body,
+#root {
+  color: var(--theme-body);
+  background-color: var(--theme-page);
+}
+
+/* Workspace canvases, including long tables and the empty area below them. */
+:root
+  :is(
+    .shell,
+    .main,
+    .work-area,
+    .content,
+    .workspace-body,
+    .kanban-board,
+    .person-record,
+    .table-scroll,
+    .list-workspace,
+    .custom-record-workspace,
+    .agent-page,
+    .reports-workspace,
+    .documents-workspace,
+    .wechat-chat-workspace,
+    .wechat-conversation-sidebar,
+    .entity-settings,
+    .ba-settings,
+    .team-tasks
+  ) {
+  color: var(--theme-body);
+  background-color: var(--theme-page);
+}
+
+/* Navigation sits one shade below the workspace, including the mobile drawer. */
+.attio-shell .sidebar {
+  background-color: var(--theme-sidebar);
+  border-color: var(--theme-line);
+}
+
+.attio-shell .topbar,
+.attio-shell .view-heading,
+.attio-shell .view-toolbar,
+.wf-viewbar,
+.wf-toolbar,
+:root .table-footer {
+  background-color: var(--theme-page);
+  border-color: var(--theme-line);
+}
+
+/* Base controls retain their existing sizes, radius, spacing and icon family. */
+button,
+input,
+select,
+textarea,
+kbd {
+  color: var(--theme-body);
+  border-color: var(--theme-line);
+  background-color: var(--theme-surface);
+}
+
+button:hover:not(:disabled) {
+  background-color: var(--theme-hover);
+  border-color: var(--theme-line-strong);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--theme-muted);
+}
+
+:root input:is([type='checkbox'], [type='radio']) {
+  accent-color: var(--theme-accent);
+}
+
+a {
+  color: var(--theme-heading);
+  text-decoration-color: var(--theme-accent);
+}
+
+::selection {
+  color: var(--theme-heading);
+  background: var(--theme-selected);
+}
+
+/* One primary action color, including feature-specific hard-coded buttons. */
+:root
+  :is(
+    button.primary,
+    .send-message,
+    .ask-send,
+    .agent-card-action.is-primary,
+    .reports-workspace .report-primary,
+    .report-dialog-footer .report-primary,
+    .entity-settings button.primary
+  ) {
+  color: var(--theme-surface);
+  border-color: var(--theme-accent);
+  background: var(--theme-accent);
+  box-shadow: none;
+}
+
+:root
+  :is(
+    button.primary,
+    .send-message,
+    .ask-send,
+    .agent-card-action.is-primary,
+    .report-primary,
+    .entity-settings button.primary
+  ):is(:hover, :active):not(:disabled) {
+  color: var(--theme-surface);
+  border-color: var(--theme-accent-hover);
+  background: var(--theme-accent-hover);
+}
+
+:root :is(.send-message, .ask-send, .agent-card-action.is-primary, button.primary):disabled {
+  color: var(--theme-muted);
+  border-color: var(--theme-line);
+  background: var(--theme-neutral);
+}
+
+/* Navigation uses dark, readable small text; teal marks the current location. */
+.attio-shell .sidebar nav button,
+.attio-shell .sidebar-settings-button,
+.attio-shell .sidebar-search,
+.attio-shell .sidebar-group-heading,
+.attio-shell .sidebar-group-toggle,
+.attio-shell .sidebar-group-more {
+  color: var(--theme-muted);
+  background-color: transparent;
+}
+
+.attio-shell .sidebar nav button:hover,
+.attio-shell .sidebar-settings-button:hover,
+.attio-shell .sidebar-search:hover {
+  color: var(--theme-heading);
+  background-color: var(--theme-hover);
+}
+
+.attio-shell .sidebar nav button.active,
+.attio-shell .sidebar-settings-button.active {
+  color: var(--theme-heading);
+  background-color: var(--theme-selected);
+}
+
+.attio-shell .sidebar nav button.active > svg,
+.attio-shell .sidebar-settings-button.active > svg {
+  color: var(--theme-accent);
+}
+
+.attio-shell .workspace-wordmark,
+.attio-shell .workspace-brand-name,
+.brand,
+.breadcrumb strong {
+  color: var(--theme-heading);
+}
+
+.attio-shell .workspace-brand-descriptor,
+.attio-shell .sidebar-user small,
+.topbar-note {
+  color: var(--theme-muted);
+}
+
+.sidebar-resize-handle:focus-visible::after,
+.sidebar.is-resizing .sidebar-resize-handle::after,
+.column-resize-handle:hover::after,
+.column-resize-handle:focus-visible::after,
+.column-resize-handle.resizing::after {
+  background-color: var(--theme-accent);
+}
+
+/* View controls and tabs keep their original layout and selection behavior. */
+:root :is(.view-tabs, .wf-segments, .ask-context, .recipient-chip) {
+  color: var(--theme-body);
+  background: var(--theme-neutral);
+  border-color: var(--theme-line);
+}
+
+.attio-shell .view-tabs button.current,
+.wf-segments button[aria-pressed='true'],
+.document-tabs button.current {
+  color: var(--theme-heading);
+  background: var(--theme-selected);
+}
+
+:root .personal-settings-nav > button {
+  color: var(--theme-body);
+  background-color: var(--theme-surface);
+}
+
+:root .personal-settings-nav > button.active {
+  color: var(--theme-accent);
+}
+
+:root .personal-settings-nav > button:hover:not(:disabled) {
+  background-color: var(--theme-hover);
+}
+
+:root
+  :is(
+    .tabs button.current,
+    .person-record-tabs > button[aria-selected='true'],
+    .ba-tabs > button[aria-selected='true'],
+    .view-heading > .view-selector
+  ) {
+  color: var(--theme-heading);
+  border-bottom-color: var(--theme-accent);
+}
+
+:root :is(.popover > summary, .view-selector > summary, .text-button, .icon-button) {
+  color: var(--theme-muted);
+}
+
+:root :is(.popover[open] > summary, .popover > summary:hover, .icon-button:hover) {
+  color: var(--theme-heading);
+  background-color: var(--theme-hover);
+}
+
+:root :is(.search, .ask-typha-trigger, .agent-shortcuts button) {
+  color: var(--theme-body);
+  border-color: var(--theme-line);
+  background: var(--theme-surface);
+}
+
+:root :is(.search input, .sidebar-search, .record-name, .table-link) {
+  background-color: transparent;
+}
+
+/* Tables include sticky check/name cells so the theme does not expose strips. */
+:root :is(.record-table, .wf-table, .resizable-table) {
+  color: var(--theme-body);
+  background-color: var(--theme-page);
+}
+
+.attio-shell .record-table th,
+.wf-table th,
+.wf-table th:nth-child(2),
+.wf-table .wf-check,
+.ba-attribute-table th {
+  color: var(--theme-muted);
+  border-color: var(--theme-line);
+  background-color: var(--theme-neutral);
+}
+
+.attio-shell .record-table td,
+.wf-table td,
+.wf-table td:nth-child(2),
+.wf-table tfoot td {
+  color: var(--theme-body);
+  border-color: var(--theme-line);
+  background-color: var(--theme-page);
+}
+
+.attio-shell tbody tr:hover td,
+.wf-table tbody tr:hover td,
+.wf-table tbody tr:hover .wf-check {
+  background-color: var(--theme-hover);
+}
+
+.attio-shell tbody tr.selected td,
+.wf-table tbody tr.selected td,
+.wf-table tbody tr:has(input:checked) .wf-check {
+  background-color: var(--theme-selected);
+}
+
+:root :is(.record-name, .customer-link strong, .project-count, .table-link) {
+  color: var(--theme-heading);
+}
+
+:root :is(.record-name:hover, .table-link:hover, .customer-link:hover) {
+  color: var(--theme-heading);
+  text-decoration-color: var(--theme-accent);
+}
+
+:root :is(.table-footer, .title-count, .date-cell, .missing) {
+  color: var(--theme-muted);
+}
+
+/* Cards and floating surfaces sit above the warm canvas in the source white. */
+:root
+  :is(
+    .customer-card,
+    .kanban-card,
+    .agent-reply-card,
+    .popover-panel,
+    .modal,
+    .detail-drawer,
+    .agent-composer,
+    .recipient-options,
+    .connection-form,
+    .mail-account,
+    .report-template,
+    .report-card,
+    .report-saved-card,
+    .report-editor-preview,
+    .ba-activity-card,
+    .ba-task-card,
+    .person-related-card,
+    .person-highlight-grid .person-highlight,
+    .ask-panel-footer form
+  ) {
+  color: var(--theme-body);
+  border-color: var(--theme-line);
+  background-color: var(--theme-surface);
+}
+
+:root :is(.customer-card:hover, .kanban-card:hover, .ba-activity-card:hover) {
+  border-color: var(--theme-line-strong);
+  background-color: var(--theme-hover);
+}
+
+:root :is(.customer-card.selected, .kanban-card.is-selected) {
+  border-color: var(--theme-accent);
+  background-color: var(--theme-selected);
+}
+
+:root
+  :is(
+    .agent-card-footer,
+    .agent-card-avatar,
+    .agent-card-state,
+    .compose-footer,
+    .person-record-heading,
+    .personal-settings-nav,
+    .memory-preference-edit,
+    .document-locked-scope,
+    .document-dropzone,
+    .document-knowledge,
+    .compose-original,
+    .customer-profile,
+    .wf-setting-label,
+    .kanban-card-identity,
+    .person-avatar,
+    .person-company-avatar
+  ) {
+  color: var(--theme-body);
+  border-color: var(--theme-line);
+  background-color: var(--theme-page);
+}
+
+:root :is(.report-saved-icon, .report-empty-icon) {
+  color: var(--theme-accent);
+  border-color: var(--theme-line);
+  background-color: var(--theme-selected);
+}
+
+:root :is(.report-template-index, .report-template-copy button:hover) {
+  color: var(--theme-heading);
+}
+
+:root .entity-tabs button[aria-selected='true'] {
+  color: var(--theme-heading);
+  border-bottom-color: var(--theme-accent);
+  background-color: var(--theme-selected);
+}
+
+:root
+  :is(
+    .agent-card-identity strong,
+    .agent-card-fields dd,
+    .card-identity strong,
+    .person-record,
+    .document-name,
+    .custom-form-body input,
+    .custom-create-body input
+  ) {
+  color: var(--theme-heading);
+}
+
+:root
+  :is(
+    .agent-card-fields dt,
+    .agent-card-identity > span,
+    .agent-card-description,
+    .agent-card-provenance,
+    .agent-candidate-heading,
+    .agent-reply-sources > summary,
+    .agent-greeting p,
+    .agent-model-status,
+    .composer-hint,
+    .card-contact,
+    .card-owner,
+    .card-projects
+  ) {
+  color: var(--theme-muted);
+}
+
+/* Home, conversation and Ask retain the 736px conversation/composer geometry. */
+:root :is(.ask-typha-panel, .home-workflow, .agent-topbar, .chat-page) {
+  color: var(--theme-body);
+  border-color: var(--theme-line);
+  background-color: var(--theme-page);
+}
+
+:root
+  :is(.agent-mark, .chat-message.user, .ask-question, .chat-material pre, .ask-suggestions button) {
+  color: var(--theme-body);
+  border-color: var(--theme-line);
+  background-color: var(--theme-surface);
+}
+
+:root :is(.agent-composer textarea, .agent-composer textarea:focus, .ask-composer textarea) {
+  color: var(--theme-body);
+  background: transparent;
+}
+
+/* Source content and email bodies remain legible on a clean white surface. */
+:root :is(.mail-reader-content, .mail-reader-message, .document-original, .compose-body) {
+  color: var(--theme-body);
+  background-color: var(--theme-surface);
+}
+
+.entity-settings {
+  --entity-ink: var(--theme-heading);
+  --entity-secondary: var(--theme-muted);
+  --entity-line: var(--theme-line);
+  --focus-border: var(--theme-accent);
+}
+
+.person-record {
+  --person-line: var(--theme-line);
+  --person-muted: var(--theme-muted);
+}
+
+.reports-workspace {
+  --report-blue: var(--theme-accent);
+  --report-muted: var(--theme-muted);
+}
+
+.report-template {
+  --art: var(--theme-accent);
+}
+
+.report-template.tone-teal,
+.report-template-art.tone-teal {
+  --art: var(--theme-accent);
+}
+
+.report-template.tone-amber,
+.report-template-art.tone-amber {
+  --art: var(--theme-coral);
+}
+
+/* Coral is an accent, not a replacement for warning/error/success semantics. */
+.attio-shell .sidebar nav[aria-label='工作空间导航'] button:nth-child(1) svg,
+.attio-shell .sidebar nav[aria-label='工作空间导航'] button:nth-child(2) svg {
+  color: var(--theme-accent);
+}
+
+.attio-shell .sidebar nav[aria-label='工作空间导航'] button:nth-child(3) svg {
+  color: var(--theme-coral);
+}
+
+.attio-shell .sidebar nav[aria-label='清单'] svg,
+.attio-shell .sidebar nav[aria-label='对话'] svg,
+.attio-shell .sidebar nav .sidebar-group-more {
+  color: var(--theme-muted);
+}
+
+.attio-shell .sidebar nav[aria-label='工作空间导航'] button.active svg {
+  color: var(--theme-accent);
+}
+
+:root
+  :is(.home-workflow-form-footer, .home-workflow-result-actions, .wf-footer, .report-template-art) {
+  border-color: var(--theme-line);
+  background-color: var(--theme-page);
+}
+
+:root :is(.wf-selection, .person-heading-actions .person-compose-button, .report-preview-notice) {
+  color: var(--theme-heading);
+  border-color: var(--theme-line);
+  background-color: var(--theme-selected);
+}
+
+:root
+  :is(
+    .person-record a,
+    .ask-answer a,
+    .email-address .email-address-link,
+    .kanban-card .kanban-card-title,
+    .kanban-card .kanban-card-title:hover
+  ) {
+  color: var(--theme-heading);
+  text-decoration-color: var(--theme-accent);
+}
+
+:root :is(.agent-shortcuts button:hover:not(:disabled), .home-project-summary:hover) {
+  background-color: var(--theme-hover);
+  border-color: var(--theme-line-strong);
+}
+
+:root :is(.agent-shortcuts button svg, .person-heading-actions .person-compose-button svg) {
+  color: var(--theme-accent);
+}
+
+:root :is(.document-dropzone > svg, .agent-mark > svg, .ask-typha-trigger > svg) {
+  color: var(--theme-accent);
+}
+
+/* Keep the existing keyboard-focus behavior and change only its color. */
+:root
+  :is(
+    button:focus-visible,
+    a:focus-visible,
+    summary:focus-visible,
+    .column-resize-handle:focus-visible
+  ) {
+  outline-color: var(--theme-accent);
+}
+
+:root :is(input:focus, select:focus, textarea:focus) {
+  border-color: var(--theme-accent);
+}

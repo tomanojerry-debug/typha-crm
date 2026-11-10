@@ -1,0 +1,257 @@
+.attio-shell .prospects-page {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.attio-shell .prospects-records {
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.prospects-filter-popover .popover-panel {
+  min-width: 240px;
+  padding: 14px;
+}
+.prospects-filter-popover .popover-panel > label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+.prospects-fields-popover .popover-panel {
+  min-width: 240px;
+}
+.prospects-page > .prospects-records > .prospects-notice {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 7px 20px;
+}
+.prospect-drawer:not(.full-drawer) .prospects-form-grid,
+.prospect-drawer:not(.full-drawer) .prospects-condition-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.prospect-drawer:not(.full-drawer) .prospects-section-heading {
+  flex-wrap: wrap;
+}
+.prospect-drawer.full-drawer .prospects-detail {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 26px 28px;
+}
+.prospects-source-warning {
+  display: block;
+  color: #996521;
+  font-size: 12px;
+  line-height: 20px;
+}
+.prospects-detail {
+  min-width: 0;
+}
+.prospects-detail-heading,
+.prospects-detail-title,
+.prospects-section-heading,
+.prospects-save {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.prospects-detail-title {
+  margin: 20px 0;
+}
+.prospects-detail-title h2 {
+  margin: 6px 0 0;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 28px;
+}
+.prospects-detail-title span {
+  color: var(--theme-muted);
+  font-size: 11px;
+}
+.prospects-editor {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.prospects-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+.prospects-form-grid label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  color: var(--theme-muted);
+  font-size: 12px;
+  line-height: 20px;
+}
+.prospects-form-grid :is(input, select, textarea),
+.prospects-editor > label :is(input, textarea),
+.prospects-editor > select {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  color: var(--theme-body);
+  font-size: 12px;
+  line-height: 20px;
+}
+.prospects-form-grid textarea {
+  resize: vertical;
+}
+.prospects-wide {
+  grid-column: 1 / -1;
+}
+.prospects-section-heading {
+  margin: 26px 0 14px;
+}
+.prospects-section-heading h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.prospects-section-heading p {
+  margin: 5px 0 0;
+  color: var(--theme-muted);
+  font-size: 12px;
+  line-height: 20px;
+}
+.prospects-requirements {
+  display: grid;
+  gap: 12px;
+}
+.prospects-requirement {
+  padding: 16px;
+  border: 1px solid var(--theme-line);
+  border-radius: 5px;
+}
+.prospects-requirement-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.prospects-requirement-top > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  color: var(--theme-muted);
+  background: var(--theme-neutral);
+  border-radius: 4px;
+  font-size: 11px;
+}
+.prospects-requirement-top > input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  font-weight: 500;
+  font-size: 13px;
+}
+.prospects-condition-fields {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.prospects-outcome {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--theme-neutral);
+  border-radius: 5px;
+}
+.prospects-acknowledge {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 15px;
+  font-size: 12px;
+  line-height: 20px;
+}
+.prospects-acknowledge input {
+  margin-top: 4px;
+}
+.prospects-save {
+  margin-top: 20px;
+  padding: 14px 0;
+  border-top: 1px solid var(--theme-line);
+}
+.prospects-save > span {
+  color: var(--theme-muted);
+  font-size: 12px;
+}
+.prospects-save > div,
+.prospects-sources,
+.prospects-inline-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.prospects-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--theme-muted);
+  font-size: 12px;
+  line-height: 20px;
+}
+.prospects-detail .muted,
+.prospects-create-dialog .muted {
+  font-size: 12px;
+  line-height: 21px;
+}
+.prospects-create-dialog {
+  width: min(660px, calc(100vw - 32px));
+}
+.prospects-dialog-body {
+  padding: 0 24px 20px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+.prospects-dialog-body > .prospects-editor {
+  display: grid;
+  gap: 12px;
+}
+.prospects-dialog-body .prospects-editor > label {
+  margin: 0;
+}
+.prospects-new-customer {
+  padding: 16px;
+  background: var(--theme-neutral);
+  border-radius: 5px;
+}
+.prospects-new-customer h3 {
+  margin: 0;
+  font-size: 14px;
+}
+.prospects-inline-actions {
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+@media (max-width: 950px) {
+  .prospects-condition-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .prospects-form-grid,
+  .prospects-condition-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .prospects-detail-heading,
+  .prospects-detail-title,
+  .prospects-section-heading,
+  .prospects-save {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .prospects-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .prospects-dialog-body {
+    padding: 0 16px 16px;
+  }
+}

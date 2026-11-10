@@ -1,0 +1,193 @@
+/* Decorative color rotation only: record order, fields, states and layout stay
+   with their existing components. Warning/error/success surfaces are excluded. */
+.attio-shell {
+  --pastel-card-blue: #e5edfa;
+  --pastel-card-lilac: #eee7f8;
+  --pastel-card-peach: #fae9df;
+  --pastel-card-mint: #e3f0e9;
+  --pastel-card-ink: #32354b;
+  --pastel-card-muted: #5f6578;
+  --pastel-card-border: #ffffff;
+  --pastel-card-shadow: 0 2px 4px #44456c03, 0 7px 22px #44456c06;
+}
+
+:root
+  .attio-shell
+  :is(
+    .customer-card,
+    .kanban-card,
+    .agent-shortcuts > button,
+    .home-overview-list > li,
+    .home-recent-project-list > li
+  ) {
+  --pastel-card-fill: var(--pastel-card-blue);
+}
+
+:root
+  .attio-shell
+  :is(
+    .customer-card:nth-child(4n + 2),
+    .kanban-card:nth-child(4n + 2),
+    .agent-shortcuts > button:nth-child(4n + 2),
+    .home-overview-list > li:nth-child(4n + 2),
+    .home-recent-project-list > li:nth-child(4n + 2)
+  ) {
+  --pastel-card-fill: var(--pastel-card-lilac);
+}
+
+:root
+  .attio-shell
+  :is(
+    .customer-card:nth-child(4n + 3),
+    .kanban-card:nth-child(4n + 3),
+    .agent-shortcuts > button:nth-child(4n + 3),
+    .home-overview-list > li:nth-child(4n + 3),
+    .home-recent-project-list > li:nth-child(4n + 3)
+  ) {
+  --pastel-card-fill: var(--pastel-card-peach);
+}
+
+:root
+  .attio-shell
+  :is(
+    .customer-card:nth-child(4n + 4),
+    .kanban-card:nth-child(4n + 4),
+    .agent-shortcuts > button:nth-child(4n + 4),
+    .home-overview-list > li:nth-child(4n + 4),
+    .home-recent-project-list > li:nth-child(4n + 4)
+  ) {
+  --pastel-card-fill: var(--pastel-card-mint);
+}
+
+/* Companies, people, projects, lists and custom tables share KanbanCard. */
+:root .attio-shell :is(.customer-card, .kanban-card) {
+  color: var(--pastel-card-ink);
+  border: 1px solid var(--pastel-card-border);
+  border-radius: 15px;
+  background-color: var(--pastel-card-fill);
+  box-shadow: var(--pastel-card-shadow);
+}
+
+:root .attio-shell :is(.customer-card:hover, .kanban-card:hover, .kanban-card:focus-within) {
+  border-color: color-mix(in srgb, var(--theme-accent) 28%, white);
+  background-color: var(--pastel-card-fill);
+  box-shadow:
+    0 3px 6px #44456c05,
+    0 9px 24px #44456c0b;
+}
+
+:root .attio-shell :is(.customer-card.selected, .kanban-card.is-selected) {
+  border-color: var(--theme-accent);
+  background-color: color-mix(in srgb, var(--theme-accent) 6%, var(--pastel-card-fill));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--theme-accent) 30%, transparent),
+    var(--pastel-card-shadow);
+}
+
+:root .attio-shell :is(.kanban-card-title, .kanban-card-title:hover, .card-identity strong) {
+  color: var(--pastel-card-ink);
+  background-color: transparent;
+}
+
+:root .attio-shell .kanban-card-identity {
+  color: var(--theme-accent);
+  border-color: #ffffffc7;
+  border-radius: 9px;
+  background-color: #ffffff91;
+}
+
+:root .attio-shell :is(.kanban-card-field > span, .card-contact, .card-owner, .card-projects) {
+  color: var(--pastel-card-muted);
+}
+
+:root .attio-shell .kanban-card-field > div {
+  color: var(--pastel-card-ink);
+}
+
+:root .attio-shell .kanban-card-footer {
+  color: var(--pastel-card-muted);
+  border-top-color: #ffffffb8;
+}
+
+/* The existing Home shortcuts retain their flex wrapping and touch targets. */
+:root .attio-shell .agent-shortcuts > button {
+  color: var(--pastel-card-ink);
+  border-color: var(--pastel-card-border);
+  border-radius: 12px;
+  background-color: var(--pastel-card-fill);
+  box-shadow: var(--pastel-card-shadow);
+}
+
+:root .attio-shell .agent-shortcuts > button > svg {
+  color: var(--theme-accent);
+}
+
+:root .attio-shell .agent-shortcuts > button:hover:not(:disabled),
+:root .attio-shell .agent-shortcuts > button:active:not(:disabled) {
+  color: var(--pastel-card-ink);
+  border-color: color-mix(in srgb, var(--theme-accent) 28%, white);
+  background-color: color-mix(in srgb, var(--theme-accent) 4%, var(--pastel-card-fill));
+}
+
+/* These are real server-backed overview/project rows, still in list order. */
+:root .attio-shell :is(.home-overview-list > li, .home-recent-project-list > li) {
+  margin-block: 7px;
+  color: var(--pastel-card-ink);
+  border: 1px solid var(--pastel-card-border);
+  border-radius: 14px;
+  background-color: var(--pastel-card-fill);
+  box-shadow: var(--pastel-card-shadow);
+}
+
+:root .attio-shell .home-overview-list > li {
+  padding-inline: 14px;
+}
+
+:root .attio-shell .home-recent-project-list > li > button {
+  padding-inline: 14px;
+  color: var(--pastel-card-ink);
+  border-radius: 13px;
+  background-color: transparent;
+}
+
+:root .attio-shell .home-recent-project-list > li > button:hover:not(:disabled) {
+  background-color: #ffffff47;
+}
+
+:root
+  .attio-shell
+  :is(
+    .home-work-overview h2,
+    .home-recent-projects h2,
+    .home-overview-item-text > strong,
+    .home-recent-project-name > strong
+  ) {
+  color: var(--pastel-card-ink);
+}
+
+:root
+  .attio-shell
+  :is(
+    .home-work-overview > header > span,
+    .home-overview-item-text > p,
+    .home-recent-project-name > small,
+    .home-recent-project-list time
+  ) {
+  color: var(--pastel-card-muted);
+}
+
+:root .attio-shell .home-overview-list > li > svg:not(.home-overview-caution),
+:root .attio-shell .home-recent-project-list > li > button > svg {
+  color: var(--theme-accent);
+}
+
+/* An outgoing issue keeps a neutral surface and its original caution color. */
+:root .attio-shell .home-overview-list > li:has(> .home-overview-caution) {
+  background-color: var(--theme-surface);
+}
+
+:root .attio-shell :is(.customer-card:focus-visible, .agent-shortcuts > button:focus-visible),
+:root .attio-shell .kanban-board :is(button, select):focus-visible,
+:root .attio-shell .home-recent-project-list > li > button:focus-visible {
+  outline-color: var(--theme-accent);
+}

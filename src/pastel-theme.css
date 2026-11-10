@@ -1,0 +1,396 @@
+/* Soft pastel workspace inspired by the user's reference. Visual overrides only;
+   existing navigation, flat card layouts, scrolling and business states remain. */
+:root,
+.attio-shell {
+  --theme-page: #faf9fc;
+  --theme-sidebar: #f0edf8;
+  --theme-surface: #ffffff;
+  --theme-heading: #302d3e;
+  --theme-body: #494557;
+  --theme-accent: #714bc4;
+  --theme-coral: #b66d95;
+  --theme-warm: #fcebdc;
+  --theme-muted: #6b6475;
+  --theme-line: #e9e5ef;
+  --theme-line-strong: #d2c8e3;
+  --theme-neutral: #f4f1f8;
+  --theme-selected: #eee7fa;
+  --theme-hover: #f5f0fc;
+  --theme-accent-hover: #603aaf;
+  --ink: var(--theme-heading);
+  --muted: var(--theme-muted);
+  --line: var(--theme-line);
+  --soft: var(--theme-neutral);
+  --accent: var(--theme-accent);
+  --focus-border: var(--theme-accent);
+}
+
+body,
+#root {
+  background: #eeedf2;
+}
+
+:root .shell.attio-shell {
+  background:
+    radial-gradient(ellipse at 0% 90%, #f0d9ee 0, transparent 48%),
+    radial-gradient(ellipse at 95% 0%, #e2eafa 0, transparent 48%), #f7f5f9;
+}
+
+/* Translucent surfaces share one quiet backdrop, without changing the existing
+   fixed-position or scroll containers. */
+:root .attio-shell .main {
+  background: rgb(255 255 255 / 70%);
+}
+
+:root
+  .attio-shell
+  :is(
+    .work-area,
+    .content,
+    .workspace-body,
+    .table-scroll,
+    .kanban-board,
+    .list-workspace,
+    .custom-record-workspace,
+    .agent-page,
+    .chat-page,
+    .reports-workspace,
+    .notes-workspace,
+    .documents-workspace,
+    .entity-settings,
+    .ba-settings,
+    .team-tasks
+  ) {
+  background: transparent;
+}
+
+:root .attio-shell .sidebar {
+  background: linear-gradient(
+    155deg,
+    rgb(246 251 255 / 94%) 0%,
+    rgb(237 234 250 / 88%) 50%,
+    #f5e5f2 100%
+  );
+  border-right: 1px solid rgb(255 255 255 / 90%);
+}
+
+:root .attio-shell .sidebar-search {
+  background: rgb(255 255 255 / 48%);
+  border: 1px solid rgb(255 255 255 / 82%);
+  border-radius: 9px;
+  box-shadow: 0 2px 6px #4d3b6b03;
+}
+
+:root .attio-shell .sidebar nav button,
+:root .attio-shell .sidebar-settings-button {
+  border-radius: 8px;
+}
+
+:root .attio-shell .sidebar nav button.active,
+:root .attio-shell .sidebar-settings-button.active {
+  color: var(--theme-heading);
+  background: rgb(255 255 255 / 82%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 94%),
+    0 3px 10px #4d3b6b05;
+}
+
+:root .attio-shell .sidebar nav button:hover:not(.active):not(:disabled),
+:root .attio-shell .sidebar-settings-button:hover:not(.active) {
+  background: rgb(255 255 255 / 48%);
+}
+
+:root .attio-shell .sidebar nav button.active > svg,
+:root .attio-shell .sidebar nav[aria-label='工作空间导航'] button.active svg {
+  color: var(--theme-accent);
+}
+
+:root .attio-shell .sidebar nav[aria-label='工作空间导航'] button:not(.active) svg {
+  color: #797386;
+}
+
+:root .attio-shell :is(.topbar, .view-heading, .view-toolbar, .wf-viewbar, .wf-toolbar) {
+  border-color: var(--theme-line);
+  background: rgb(255 255 255 / 35%);
+}
+
+:root .attio-shell :is(input, select, textarea) {
+  border-color: var(--theme-line);
+  border-radius: 8px;
+}
+
+:root .attio-shell :is(.search, .notes-search, .ask-typha-trigger) {
+  border-color: var(--theme-line);
+  border-radius: 9px;
+  background: rgb(255 255 255 / 92%);
+}
+
+:root .attio-shell :where(button:not(.icon-button):not(.text-button)) {
+  border-radius: 8px;
+}
+
+/* One violet primary action; disabled buttons still use their native state. */
+:root
+  .attio-shell
+  :is(button.primary, .send-message, .ask-send, .agent-card-action.is-primary, .report-primary) {
+  color: #ffffff;
+  border-color: var(--theme-accent);
+  background: var(--theme-accent);
+  box-shadow: 0 3px 9px #714bc419;
+}
+
+:root
+  .attio-shell
+  :is(
+    button.primary,
+    .send-message,
+    .ask-send,
+    .agent-card-action.is-primary,
+    .report-primary
+  ):hover:not(:disabled) {
+  color: #ffffff;
+  border-color: var(--theme-accent-hover);
+  background: var(--theme-accent-hover);
+}
+
+:root
+  .attio-shell
+  :is(
+    button.primary,
+    .send-message,
+    .ask-send,
+    .agent-card-action.is-primary,
+    .report-primary
+  ):disabled {
+  color: var(--theme-muted);
+  border-color: var(--theme-line);
+  background: var(--theme-neutral);
+  box-shadow: none;
+}
+
+/* Floating content stays opaque so source text and input values remain clear. */
+:root
+  .attio-shell
+  :is(.popover-panel, .cell-value-popover, .recipient-options, .custom-icon-palette) {
+  color: var(--theme-body);
+  border-color: var(--theme-line);
+  border-radius: 12px;
+  background: var(--theme-surface);
+  box-shadow: 0 10px 30px #4a365b12;
+}
+
+:root .modal {
+  color: var(--theme-body);
+  border-color: #ffffff;
+  border-radius: 18px;
+  background: var(--theme-surface);
+  box-shadow:
+    0 20px 65px #3a2d5721,
+    0 0 0 1px #e7e0ef;
+}
+
+:root .modal::backdrop {
+  background: #31233e30;
+  backdrop-filter: blur(3px);
+}
+
+:root .modal > header {
+  background: #fcfafe;
+  border-color: var(--theme-line);
+}
+
+:root .attio-shell .detail-drawer {
+  background: var(--theme-surface);
+  border-color: var(--theme-line);
+}
+
+/* Tables remain dense and scroll within the existing workspace body. */
+:root .attio-shell .workspace-body:has(.record-table) {
+  margin: 0 14px;
+  border: 1px solid #ebe7f0;
+  border-radius: 13px;
+  background: rgb(255 255 255 / 75%);
+}
+
+:root .attio-shell :is(.record-table, .wf-table, .resizable-table) {
+  background: var(--theme-surface);
+}
+
+:root .attio-shell :is(.record-table th, .wf-table th, .wf-table .wf-check) {
+  color: #736b80;
+  background: #f6f3fa;
+  border-color: var(--theme-line);
+}
+
+:root .attio-shell :is(.record-table td, .wf-table td, .wf-table tfoot td) {
+  color: var(--theme-body);
+  background: var(--theme-surface);
+  border-color: #eeeaf3;
+}
+
+:root .attio-shell :is(.record-table, .wf-table) tbody tr:hover td,
+:root .attio-shell .wf-table tbody tr:hover .wf-check {
+  background: var(--theme-hover);
+}
+
+:root .attio-shell :is(.record-table, .wf-table) tbody tr.selected td,
+:root .attio-shell .wf-table tbody tr:has(input:checked) .wf-check {
+  background: var(--theme-selected);
+}
+
+:root .attio-shell .table-footer {
+  background: transparent;
+  border-color: var(--theme-line);
+}
+
+:root .attio-shell :is(.agent-composer, .ask-panel-footer form) {
+  border: 1px solid #e6e0ee;
+  border-radius: 17px;
+  background: var(--theme-surface);
+  box-shadow:
+    0 6px 20px #6c507b06,
+    0 0 0 4px rgb(255 255 255 / 32%);
+}
+
+:root .attio-shell :is(.agent-card-footer, .compose-footer, .home-workflow-form-footer) {
+  background: #f8f5fc;
+  border-color: var(--theme-line);
+}
+
+:root .attio-shell .entity-ai-filter {
+  color: var(--theme-accent);
+  border-color: #e3d8f3;
+  background: #f3ecfd;
+}
+
+:root
+  .attio-shell
+  :is(
+    .custom-icon-grid button[aria-pressed='true'],
+    .entity-ai-filter[aria-pressed='true'],
+    .mail-template-option[aria-selected='true'],
+    .activity-filters button.current,
+    .settings-layout button.current
+  ) {
+  color: var(--theme-accent);
+  border-color: var(--theme-line-strong);
+  background: var(--theme-selected);
+}
+
+:root .attio-shell .notes-view-tabs button.active {
+  color: var(--theme-accent);
+}
+
+:root .attio-shell .notes-view-tabs button.active::after {
+  background: var(--theme-accent);
+}
+
+/* A long Home overview must grow with its content so its bottom padding remains
+   part of the scroll area, rather than overflowing a flex-shrunk page. */
+:root .attio-shell .agent-page:not(.has-conversation) {
+  flex-shrink: 0;
+}
+
+/* Keep scroll thumbs inside the curved frame, with transparent tracks. The
+   existing content/table/transcript containers remain the only scroll owners. */
+:root .attio-shell :is(.content, .workspace-body, .table-scroll, .chat-transcript) {
+  scrollbar-width: thin;
+  scrollbar-color: #cfc9d9 transparent;
+}
+
+@supports selector(::-webkit-scrollbar) {
+  :root .attio-shell :is(.content, .workspace-body, .table-scroll, .chat-transcript) {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+
+  :root
+    .attio-shell
+    :is(.content, .workspace-body, .table-scroll, .chat-transcript)::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  :root
+    .attio-shell
+    :is(.content, .workspace-body, .table-scroll, .chat-transcript)::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  :root
+    .attio-shell
+    :is(
+      .content,
+      .workspace-body,
+      .table-scroll,
+      .chat-transcript
+    )::-webkit-scrollbar-track:vertical {
+    margin-top: 14px;
+    margin-bottom: 14px;
+  }
+
+  :root
+    .attio-shell
+    :is(.content, .workspace-body, .table-scroll, .chat-transcript)::-webkit-scrollbar-thumb {
+    min-height: 32px;
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: #cfc9d9;
+    background-clip: padding-box;
+  }
+
+  :root
+    .attio-shell
+    :is(.content, .workspace-body, .table-scroll, .chat-transcript)::-webkit-scrollbar-thumb:hover {
+    background-color: #b6acc7;
+  }
+
+  :root
+    .attio-shell
+    :is(.content, .workspace-body, .table-scroll, .chat-transcript)::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  :root
+    .attio-shell
+    :is(.content, .workspace-body, .table-scroll, .chat-transcript)::-webkit-scrollbar-button {
+    display: none;
+  }
+}
+
+/* The width calculation for the resizable sidebar assumes a full viewport near
+   its 840px breakpoint. Inset the app only when ample space is available. */
+@media (min-width: 1100px) and (min-height: 650px) {
+  :root #root:has(.shell.attio-shell) {
+    height: 100dvh;
+    padding: 14px;
+  }
+
+  :root .shell.attio-shell {
+    height: 100%;
+    margin: 0;
+    border: 1px solid rgb(255 255 255 / 95%);
+    border-radius: 21px;
+    background-clip: padding-box;
+    box-shadow:
+      0 14px 40px #43374f08,
+      0 1px 4px #43374f04;
+  }
+
+  :root .attio-shell .has-conversation {
+    height: 100%;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 839px) {
+  :root .attio-shell .sidebar {
+    background: linear-gradient(155deg, #f2f6fd 0%, #eeebf9 50%, #f5e5f2 100%);
+    border-right-color: #ffffff;
+  }
+
+  :root .attio-shell .workspace-body:has(.record-table) {
+    margin: 0 8px;
+    border-radius: 10px;
+  }
+}

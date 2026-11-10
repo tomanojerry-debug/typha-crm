@@ -1,0 +1,75 @@
+.agent-answer {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.agent-answer > p {
+  margin: 0 0 13px;
+  white-space: pre-wrap;
+}
+.agent-answer > :last-child {
+  margin-bottom: 0;
+}
+.agent-answer > ul,
+.agent-answer > ol {
+  margin: 0 0 14px;
+  padding-left: 21px;
+}
+.agent-answer li {
+  margin: 3px 0;
+}
+.agent-answer strong {
+  font-weight: 550;
+}
+.agent-answer code {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #f3f4f6;
+  font-size: 0.92em;
+}
+.ask-answer .agent-answer {
+  color: #353a42;
+  line-height: 1.75;
+}
+.agent-answer-table {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 5px 0 15px;
+  border: 1px solid #e6e9ed;
+  border-radius: 5px;
+  scrollbar-width: thin;
+}
+.agent-answer-table table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: inherit;
+}
+.agent-answer-table th,
+.agent-answer-table td {
+  position: static;
+  z-index: auto;
+  height: auto;
+  padding: 7px 10px;
+  border: 0;
+  border-bottom: 1px solid #e9ebee;
+  white-space: nowrap;
+  color: inherit;
+  font-size: inherit;
+  line-height: 1.7;
+}
+.agent-answer-table th {
+  background: #f7f8fa;
+  font-weight: 550;
+}
+.agent-answer-table tbody tr {
+  cursor: text;
+}
+.agent-answer-table tbody tr:hover td {
+  background: transparent;
+}
+.agent-answer-table tbody tr:last-child td {
+  border-bottom: 0;
+}

@@ -1,0 +1,237 @@
+/* Main navigation workspaces share one title, inset and tab system.
+   Scoped record sections and the contents of each workspace retain their own layout. */
+:root .attio-shell .workspace-page {
+  --workspace-page-inset: 32px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding: 28px var(--workspace-page-inset) 32px;
+  color: var(--theme-body);
+}
+
+:root .attio-shell .workspace-page :is(.reports-inner, .entity-settings-body) {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+:root .attio-shell .reports-workspace.workspace-page {
+  overflow: visible;
+}
+
+:root .attio-shell .workspace-page-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+  min-width: 0;
+  min-height: 58px;
+  height: auto;
+  margin: 0 0 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.workspace-page-copy {
+  min-width: 0;
+}
+
+.workspace-page-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 28px;
+}
+
+:root .attio-shell .workspace-page-header h1 {
+  margin: 0;
+  color: var(--theme-heading);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  letter-spacing: -0.35px;
+  overflow-wrap: anywhere;
+}
+
+:root .attio-shell .workspace-page-header .workspace-page-description {
+  max-width: 640px;
+  margin: 6px 0 0;
+  color: var(--theme-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.workspace-page-meta,
+.workspace-page-actions,
+.workspace-page-actions > :is(.report-page-actions, .document-actions) {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.workspace-page-actions {
+  justify-content: flex-end;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+:root .attio-shell .workspace-page-actions > .report-page-actions {
+  max-width: none;
+  justify-content: flex-end;
+}
+
+:root .attio-shell .workspace-page-actions :is(button, .popover > summary) {
+  min-height: 32px;
+  font-size: 12px;
+}
+
+:root .attio-shell .workspace-page-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  margin: 0;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--theme-muted);
+  background: var(--theme-neutral);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+:root .attio-shell .workspace-page-tabs {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  gap: 24px;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0 0 20px;
+  padding: 0;
+  overflow-x: auto;
+  border: 0;
+  border-bottom: 1px solid var(--theme-line);
+  border-radius: 0;
+  background: transparent;
+  scrollbar-width: thin;
+}
+
+:root .attio-shell .workspace-page-tabs > button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--theme-muted);
+  background: transparent;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 22px;
+  white-space: nowrap;
+}
+
+:root .attio-shell .workspace-page-tabs > button::after {
+  content: none;
+}
+
+:root .attio-shell .workspace-page-tabs > button:hover:not(:disabled) {
+  color: var(--theme-heading);
+  background: transparent;
+}
+
+:root .attio-shell .workspace-page-tabs > button[aria-selected='true'] {
+  color: var(--theme-heading);
+  border-bottom-color: var(--theme-heading);
+  background: transparent;
+  font-weight: 600;
+}
+
+:root .attio-shell .workspace-page-tabs > button:focus-visible {
+  outline: 2px solid var(--theme-line-strong);
+  outline-offset: -3px;
+}
+
+:root .attio-shell .workspace-page .mail-tracking-tabs > span {
+  align-self: center;
+  margin-left: auto;
+  color: var(--theme-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* The conversation owns the remaining viewport height, including its composer. */
+:root .attio-shell .wechat-chat-workspace.workspace-page {
+  min-height: 0;
+  padding: 0;
+}
+
+:root .attio-shell .wechat-chat-workspace > .workspace-page-header {
+  margin: 0;
+  padding: 28px var(--workspace-page-inset) 20px;
+  border-bottom: 1px solid var(--theme-line);
+}
+
+@media (max-width: 1000px) {
+  :root .attio-shell .workspace-page-header {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  :root .attio-shell .workspace-page {
+    --workspace-page-inset: 16px;
+    padding-top: 22px;
+    padding-bottom: 24px;
+  }
+
+  :root .attio-shell .workspace-page-header {
+    gap: 14px;
+  }
+
+  :root .attio-shell .workspace-page-actions {
+    width: 100%;
+    justify-content: flex-start;
+    padding-top: 0;
+  }
+
+  :root .attio-shell .workspace-page-actions > .report-page-actions {
+    justify-content: flex-start;
+  }
+
+  :root .attio-shell .workspace-page-actions .compact-mail-search .popover-panel,
+  :root .attio-shell .workspace-page-actions .report-page-actions .popover-panel {
+    left: 0;
+    right: auto;
+  }
+
+  :root .attio-shell .workspace-page-tabs {
+    gap: 20px;
+  }
+
+  :root .attio-shell .wechat-chat-workspace > .workspace-page-header {
+    padding-top: 22px;
+  }
+}

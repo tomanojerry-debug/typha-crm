@@ -1,0 +1,1044 @@
+.entity-settings-body.is-graph {
+  max-width: 1500px;
+  padding-left: 30px;
+  padding-right: 30px;
+}
+.knowledge-graph-workspace {
+  margin-top: 26px;
+  font-size: 12px;
+}
+.graph-intro,
+.graph-intro > div,
+.graph-scope,
+.graph-toolbar,
+.graph-footer,
+.graph-legend,
+.graph-zoom,
+.graph-directory-pages {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.graph-intro {
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.graph-intro > div {
+  display: block;
+}
+.graph-intro h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 550;
+}
+.graph-intro p {
+  margin: 7px 0 0;
+  color: #777b85;
+  line-height: 1.6;
+}
+.graph-state {
+  color: #69717f;
+  border: 1px solid #e4e7eb;
+  border-radius: 5px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+.graph-scope {
+  flex-wrap: wrap;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #edeef1;
+}
+.graph-scope select {
+  min-width: 155px;
+  max-width: 260px;
+}
+.knowledge-graph-workspace select,
+.knowledge-graph-workspace input {
+  min-height: 31px;
+  font-size: 12px;
+}
+.graph-directory-search,
+.graph-toolbar > label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #e1e4e9;
+  background: #fff;
+  border-radius: 6px;
+  padding: 0 9px;
+  color: #9096a0;
+}
+.graph-directory-search input,
+.graph-toolbar > label input {
+  width: 140px;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.graph-directory-status {
+  margin: 10px 0 0;
+  color: #777f8c;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.graph-toolbar {
+  margin: 15px 0 12px;
+  flex-wrap: wrap;
+}
+.graph-toolbar > label input {
+  width: 190px;
+}
+.graph-toolbar > span {
+  margin-left: auto;
+  color: #838996;
+}
+.graph-view-navigation,
+.graph-view-modes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.graph-view-navigation {
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+.graph-view-modes {
+  padding: 3px;
+  background: #f1f2f5;
+  border: 1px solid #e5e6eb;
+  border-radius: 8px;
+}
+.graph-view-modes button {
+  border: 0;
+  min-height: 29px;
+  padding: 5px 10px;
+  background: transparent;
+  color: #777782;
+  gap: 5px;
+  font-size: 11px;
+}
+.graph-view-modes button[aria-pressed='true'] {
+  background: #fff;
+  color: #543b69;
+  box-shadow: 0 1px 4px #29243712;
+}
+.graph-view-explanation {
+  color: #8b8992;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.graph-view-navigation .graph-all-sources {
+  margin-left: auto;
+  font-size: 11px;
+  gap: 5px;
+}
+.graph-source-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e5e5ec;
+  border-radius: 6px;
+  padding: 0 7px;
+  color: #8a8792;
+}
+.graph-source-search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+.graph-source-count {
+  display: block;
+  margin: 10px 0;
+  color: #96919d;
+}
+.graph-all-source-list .graph-source-excerpt {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  color: #8d8793;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.graph-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  border: 1px solid #e3e6eb;
+  border-radius: 9px;
+  overflow: hidden;
+}
+.graph-canvas-shell {
+  min-width: 0;
+  min-height: 580px;
+  background-color: #fafbfc;
+  background-image: radial-gradient(#dce0e8 0.65px, transparent 0.65px);
+  background-size: 17px 17px;
+  position: relative;
+}
+.graph-legend {
+  position: absolute;
+  top: 15px;
+  left: 16px;
+  right: 12px;
+  flex-wrap: wrap;
+  z-index: 1;
+  pointer-events: none;
+}
+.graph-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #727987;
+  font-size: 10px;
+}
+.graph-legend span::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #7297d2;
+}
+.graph-legend .candidate::before {
+  background: #c29b62;
+}
+.graph-legend .claim::before {
+  background: #9a84bf;
+}
+.graph-legend small {
+  color: #9097a3;
+  font-size: 10px;
+}
+.graph-canvas {
+  display: block;
+  width: 100%;
+  height: 580px;
+  touch-action: none;
+  cursor: grab;
+}
+.graph-canvas:active {
+  cursor: grabbing;
+}
+.graph-edge {
+  cursor: pointer;
+  outline: none;
+  transition: opacity 180ms ease;
+}
+.graph-edge-line {
+  fill: none;
+  stroke: #b0b5bd;
+  stroke-width: 1.15;
+  stroke-dasharray: 2 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.7;
+  transition:
+    stroke 180ms ease,
+    stroke-width 180ms ease,
+    opacity 180ms ease;
+}
+.graph-edge.is-crm .graph-edge-line {
+  stroke: #8fa8aa;
+  stroke-dasharray: none;
+  opacity: 0.8;
+}
+.graph-edge .graph-edge-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 16;
+  pointer-events: stroke;
+}
+.graph-edge text {
+  font-size: 9px;
+  fill: #798291;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #fafbfc;
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    fill 180ms ease,
+    opacity 180ms ease;
+}
+.graph-edge.is-connected .graph-edge-line {
+  stroke: #399a96;
+  stroke-width: 1.6;
+  opacity: 1;
+}
+.graph-edge:hover .graph-edge-line,
+.graph-edge:focus-visible .graph-edge-line,
+.graph-edge.is-selected .graph-edge-line {
+  stroke: #078080;
+  stroke-width: 2;
+  opacity: 1;
+  filter: drop-shadow(0 0 3px #07808024);
+}
+.graph-edge:hover text,
+.graph-edge:focus-visible text,
+.graph-edge.is-selected text {
+  fill: #087b78;
+  opacity: 1;
+}
+.graph-edge.is-muted {
+  opacity: 0.22;
+}
+.graph-edge.is-muted:hover,
+.graph-edge.is-muted:focus-visible {
+  opacity: 1;
+}
+.graph-node {
+  cursor: pointer;
+  outline: none;
+  transition: opacity 180ms ease;
+}
+.graph-node.is-muted {
+  opacity: 0.38;
+}
+.graph-node.is-muted:hover,
+.graph-node.is-muted:focus-visible {
+  opacity: 1;
+}
+.graph-node circle {
+  fill: #edf3fc;
+  stroke: #8aa8d6;
+  stroke-width: 1.3;
+}
+.graph-node.is-candidate circle {
+  fill: #fff6e8;
+  stroke: #cfb07f;
+}
+.graph-node.is-claim circle {
+  fill: #f2eef9;
+  stroke: #b3a0ce;
+}
+.graph-node text {
+  font-size: 10px;
+  fill: #4e5868;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #fafbfc;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.graph-node .graph-node-symbol {
+  font-size: 17px;
+  fill: #6687ba;
+  stroke: none;
+}
+.graph-node.is-candidate .graph-node-symbol {
+  fill: #b48f54;
+}
+.graph-node.is-claim .graph-node-symbol {
+  fill: #8d73b2;
+  font-size: 18px;
+}
+.graph-node.is-selected circle,
+.graph-node:focus-visible circle,
+.graph-node:hover circle {
+  stroke: #3975ce;
+  stroke-width: 2.5;
+}
+.graph-zoom {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  gap: 0;
+  border: 1px solid #e0e4ea;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 2px 4px #20273508;
+  overflow: hidden;
+}
+.graph-zoom button {
+  padding: 7px;
+  border: 0;
+  border-radius: 0;
+  min-height: 30px;
+}
+.graph-zoom button + button {
+  border-left: 1px solid #edf0f3;
+}
+.graph-inspector {
+  background: #fff;
+  border-left: 1px solid #e3e6eb;
+  padding: 20px 17px;
+  overflow: auto;
+  max-height: 810px;
+  min-width: 0;
+}
+.graph-inspector-tabs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #ececf1;
+  margin-bottom: 20px;
+}
+.graph-inspector-tabs button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #85838e;
+  padding: 0 0 12px;
+}
+.graph-inspector-tabs button[aria-selected='true'] {
+  color: #8650b8;
+  box-shadow: 0 2px #9256ce;
+}
+.knowledge-focus-browser {
+  min-width: 0;
+  background: #fdfdfe;
+}
+.focus-navigation,
+.focus-caption,
+.focus-bottom-bar,
+.focus-pages,
+.focus-zoom,
+.focus-card-heading,
+.focus-card-footer,
+.focus-navigation nav,
+.focus-navigation nav > span {
+  display: flex;
+  align-items: center;
+}
+.focus-navigation {
+  padding: 15px 16px 0;
+  gap: 9px;
+  min-width: 0;
+}
+.focus-navigation .focus-back {
+  flex: 0 0 30px;
+  width: 30px;
+  min-height: 30px;
+  padding: 0;
+  justify-content: center;
+}
+.focus-navigation nav {
+  gap: 5px;
+  overflow: auto;
+  min-width: 0;
+  flex: 1;
+  scrollbar-width: thin;
+}
+.focus-navigation nav > span {
+  gap: 5px;
+  flex-shrink: 0;
+  color: #c2bfca;
+}
+.focus-navigation nav button {
+  background: transparent;
+  border: 0;
+  padding: 5px 0;
+  min-height: 28px;
+  max-width: 125px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #85818c;
+  font-size: 11px;
+}
+.focus-navigation nav button[aria-current] {
+  color: #35313d;
+  font-weight: 550;
+}
+.focus-navigation select {
+  min-width: 0;
+  width: 168px;
+  max-width: 42%;
+  font-size: 10px;
+  color: #716d79;
+}
+.focus-caption {
+  justify-content: space-between;
+  padding: 14px 18px 0;
+  gap: 8px;
+  color: #97929d;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.focus-caption > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.focus-stage {
+  height: 660px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+  cursor: grab;
+  background-image: radial-gradient(#dfdce8 0.6px, transparent 0.6px);
+  background-size: 20px 20px;
+}
+.focus-stage:active {
+  cursor: grabbing;
+}
+.focus-stage:active .focus-world,
+.focus-stage.is-wheel-zooming .focus-world {
+  transition: none;
+}
+.focus-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  transition: transform 320ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+.focus-connections {
+  width: 1100px;
+  height: 720px;
+  overflow: visible;
+  position: absolute;
+  inset: 0;
+  transition: opacity 140ms ease;
+}
+.focus-connections.is-transitioning {
+  opacity: 0;
+  pointer-events: none;
+}
+.focus-edge {
+  outline: none;
+  cursor: pointer;
+  transition: opacity 180ms ease;
+}
+.focus-edge-line {
+  fill: none;
+  stroke: #c7c1d8;
+  stroke-width: 1.8;
+  stroke-dasharray: 3 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.focus-edge.is-crm .focus-edge-line {
+  stroke: #b9b4c7;
+  stroke-dasharray: none;
+}
+.focus-edge-hit {
+  stroke: transparent;
+  stroke-width: 22;
+  fill: none;
+  pointer-events: stroke;
+}
+.focus-edge text {
+  font-size: 12px;
+  fill: #8a8498;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #fdfdfe;
+  stroke-width: 7px;
+  stroke-linejoin: round;
+  pointer-events: none;
+  opacity: 0.85;
+}
+.focus-edge.is-selected .focus-edge-line,
+.focus-edge:hover .focus-edge-line,
+.focus-edge:focus-visible .focus-edge-line {
+  stroke: #9256ce;
+  stroke-width: 2.6;
+}
+.focus-edge.is-selected text,
+.focus-edge:hover text,
+.focus-edge:focus-visible text {
+  fill: #8247bd;
+  opacity: 1;
+}
+.focus-edge.is-parallel:not(.is-selected):not(:hover):not(:focus-visible) text {
+  opacity: 0;
+}
+.focus-edge.is-muted {
+  opacity: 0.28;
+}
+.knowledge-focus-card {
+  position: absolute;
+  border: 1px solid #e1dfe8;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow:
+    0 4px 13px #34304706,
+    0 1px 2px #34304704;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: default;
+  transition:
+    left 360ms cubic-bezier(0.2, 0.75, 0.25, 1),
+    top 360ms cubic-bezier(0.2, 0.75, 0.25, 1),
+    width 360ms ease,
+    height 360ms ease,
+    opacity 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+  animation: focus-card-enter 220ms ease;
+}
+.knowledge-focus-card.is-focus {
+  border-color: #bb9ada;
+  box-shadow: 0 6px 23px #9256ce0b;
+}
+.knowledge-focus-card.is-selected {
+  border-color: #9256ce;
+  box-shadow:
+    0 0 0 1px #9256ce22,
+    0 6px 23px #9256ce0b;
+}
+.knowledge-focus-card.is-muted {
+  opacity: 0.46;
+}
+.knowledge-focus-card .focus-card-body {
+  display: block;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  text-align: left;
+  padding: 10px 12px 5px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: hidden;
+}
+.knowledge-focus-card .focus-card-body:hover {
+  background: #fbfafd;
+}
+.knowledge-focus-card .focus-card-body:focus-visible,
+.focus-card-footer button:focus-visible,
+.focus-edge:focus-visible {
+  outline: 2px solid #9256ce;
+  outline-offset: -3px;
+}
+.focus-card-heading {
+  gap: 9px;
+  min-width: 0;
+}
+.focus-card-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 31px;
+  width: 31px;
+  height: 31px;
+  border-radius: 8px;
+  color: #8b63b6;
+  background: #f4effa;
+}
+.is-candidate .focus-card-icon {
+  color: #a78957;
+  background: #fbf6ed;
+}
+.is-claim .focus-card-icon {
+  color: #8d72a9;
+  background: #f6f0fa;
+}
+.focus-card-title {
+  color: #302d38;
+  font-size: 17px;
+  line-height: 1.4;
+  font-weight: 550;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.focus-card-rows {
+  margin-top: 5px;
+  min-height: 20px;
+  color: #99939f;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.focus-card-rows > div {
+  display: flex;
+  gap: 8px;
+}
+.focus-card-rows > div > span {
+  flex-shrink: 0;
+}
+.focus-card-rows strong {
+  color: #6b6476;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.focus-card-type {
+  padding-left: 40px;
+}
+.focus-card-footer {
+  min-height: 27px;
+  border-top: 1px solid #f1eff5;
+  background: #fcfbfd;
+  padding: 0 12px;
+  justify-content: space-between;
+  gap: 6px;
+  color: #a49aaa;
+  font-size: 11px;
+}
+.focus-card-footer button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  min-height: 24px;
+  border: 0;
+  background: transparent;
+  color: #8c6ba9;
+  font-size: 11px;
+  box-shadow: none;
+}
+.focus-card-footer small {
+  font-size: 11px;
+}
+.focus-origin.is-crm {
+  color: #85808c;
+}
+.focus-origin.is-candidate {
+  color: #a38c66;
+}
+.focus-origin.is-claim {
+  color: #9780ad;
+}
+.focus-zoom {
+  position: absolute;
+  bottom: 17px;
+  right: 17px;
+  gap: 0;
+  border: 1px solid #e5e1eb;
+  border-radius: 7px;
+  background: #fff;
+  overflow: hidden;
+}
+.focus-zoom button {
+  min-height: 30px;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #8b8496;
+  box-shadow: none;
+}
+.focus-zoom span {
+  font-size: 10px;
+  color: #8c8597;
+  min-width: 36px;
+  text-align: center;
+}
+.focus-bottom-bar {
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid #f0edf4;
+  padding: 12px 17px;
+  min-height: 49px;
+  color: #a09aa8;
+  font-size: 10px;
+  flex-wrap: wrap;
+}
+.focus-pages {
+  gap: 10px;
+}
+.focus-pages button {
+  padding: 0;
+  width: 26px;
+  min-height: 26px;
+  display: grid;
+  place-items: center;
+}
+.focus-stage.is-compact {
+  height: auto;
+  min-height: 320px;
+  cursor: default;
+}
+.focus-compact-layout {
+  padding: 24px 16px;
+}
+.focus-compact-layout .knowledge-focus-card {
+  position: relative;
+  width: 100%;
+  min-height: 125px;
+  animation: none;
+}
+.focus-compact-center {
+  max-width: 290px;
+  margin: 0 auto;
+}
+.focus-compact-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #aaa2b3;
+  font-size: 10px;
+  padding: 20px 0 13px;
+}
+.focus-compact-neighbors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.focus-compact-layout .focus-card-title {
+  font-size: 12px;
+}
+.focus-compact-layout .focus-card-icon {
+  flex-basis: 24px;
+  width: 24px;
+  height: 24px;
+}
+.focus-compact-layout .focus-card-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.focus-compact-layout .focus-card-rows {
+  font-size: 10px;
+  margin-top: 10px;
+}
+.focus-compact-layout .focus-card-footer {
+  font-size: 9px;
+  padding: 3px 8px;
+  flex-wrap: wrap;
+}
+.focus-compact-layout .focus-card-footer button {
+  font-size: 9px;
+}
+.focus-compact-relation {
+  padding: 8px 10px 0;
+  color: #a297b0;
+  font-size: 9px;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.focus-compact-relation button {
+  font-size: 9px;
+  min-height: 23px;
+  padding: 2px 5px;
+  border: 1px solid #eae5f0;
+  border-radius: 4px;
+  background: #faf8fd;
+  color: #9984ad;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.focus-compact-relation button[aria-pressed='true'] {
+  color: #8247bd;
+  border-color: #b995db;
+}
+@keyframes focus-card-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .focus-world,
+  .knowledge-focus-card,
+  .focus-edge {
+    transition: none;
+    animation: none;
+  }
+  .focus-connections {
+    transition: none;
+  }
+  .focus-connections.is-transitioning {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+@media (max-width: 1200px) {
+  .graph-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .graph-inspector {
+    border-left: 0;
+    border-top: 1px solid #e3e6eb;
+    max-height: 420px;
+  }
+}
+.graph-inspector h3 {
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  margin: 9px 0;
+  font-weight: 550;
+}
+.graph-inspector p {
+  color: #77808c;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.graph-inspector h4 {
+  margin: 23px 0 10px;
+  font-size: 11px;
+  color: #7d8591;
+  font-weight: 500;
+}
+.graph-origin {
+  display: inline-block;
+  color: #7b6799;
+  font-size: 10px;
+  border-radius: 4px;
+  background: #f4f0f9;
+  padding: 3px 6px;
+}
+.graph-origin.is-crm {
+  color: #4b76ae;
+  background: #eef4fc;
+}
+.graph-origin.is-candidate {
+  color: #9f7c42;
+  background: #fff5e7;
+}
+.graph-inspector dl {
+  margin: 0;
+}
+.graph-inspector dl > div {
+  padding: 9px 0;
+  border-bottom: 1px solid #f0f1f4;
+}
+.graph-inspector dt {
+  color: #9298a3;
+  font-size: 10px;
+  margin-bottom: 5px;
+}
+.graph-inspector dd {
+  color: #535d6d;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 200px;
+  overflow: auto;
+}
+.graph-source {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  padding: 10px;
+  border-color: #e8ebf0;
+  background: #fafbfc;
+  margin: 7px 0;
+  gap: 5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.graph-source strong {
+  font-size: 11px;
+  font-weight: 500;
+}
+.graph-source span {
+  color: #7d8592;
+  font-size: 10px;
+}
+.graph-source small {
+  color: #939ba7;
+  font-size: 10px;
+}
+.graph-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 350px;
+  color: #9ca5b3;
+  text-align: center;
+  padding: 35px;
+}
+.graph-empty h3 {
+  margin: 18px 0 8px;
+  color: #687383;
+  font-weight: 500;
+  font-size: 14px;
+}
+.graph-empty p {
+  font-size: 12px;
+  line-height: 1.8;
+  max-width: 420px;
+  margin: 0;
+}
+.graph-inspector-empty {
+  margin-top: 130px;
+  text-align: center;
+  color: #a1a9b7;
+}
+.graph-inspector-empty h3 {
+  color: #7c8592;
+  font-size: 12px;
+}
+.graph-footer {
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 12px;
+  color: #979da7;
+  font-size: 10px;
+  line-height: 1.7;
+  flex-wrap: wrap;
+}
+.graph-note {
+  font-size: 11px;
+  color: #8b929e;
+  line-height: 1.8;
+}
+.graph-directory-pages {
+  gap: 5px;
+}
+.graph-directory-pages button {
+  font-size: 10px;
+  min-height: 27px;
+  padding: 3px 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .graph-edge,
+  .graph-edge-line,
+  .graph-edge text,
+  .graph-node {
+    transition: none;
+  }
+}
+@media (max-width: 1100px) {
+  .graph-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .entity-settings-body.is-graph {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+@media (max-width: 750px) {
+  .graph-layout {
+    grid-template-columns: 1fr;
+  }
+  .graph-inspector {
+    border-left: 0;
+    border-top: 1px solid #e3e6eb;
+    max-height: 400px;
+  }
+  .graph-inspector-empty {
+    margin: 12px 0;
+  }
+  .graph-canvas-shell {
+    min-height: 420px;
+  }
+  .graph-canvas {
+    height: 420px;
+  }
+  .graph-scope select {
+    flex: 1;
+    min-width: 130px;
+  }
+  .graph-toolbar > span {
+    margin-left: 0;
+  }
+  .graph-intro {
+    align-items: flex-start;
+  }
+}

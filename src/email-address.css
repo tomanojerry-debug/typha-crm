@@ -1,0 +1,74 @@
+.email-address {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  max-width: 100%;
+  min-width: 0;
+}
+.email-address .email-address-link {
+  display: inline-block;
+  border: 0;
+  background: transparent;
+  color: #5979b0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1.6;
+  min-height: 0;
+  padding: 1px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  max-width: 100%;
+}
+.email-address .email-address-link:hover {
+  text-decoration: underline;
+}
+.email-address .email-address-actions {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  gap: 2px;
+}
+.email-address:hover .email-address-actions,
+.email-address:focus-within .email-address-actions {
+  opacity: 1;
+  width: auto;
+  padding-left: 4px;
+}
+.email-address-actions > button {
+  display: grid;
+  place-items: center;
+  min-height: 22px;
+  width: 22px;
+  border: 0;
+  padding: 3px;
+  background: #f2f4f8;
+  color: #818b9b;
+  border-radius: 4px;
+}
+.email-address-actions > button:hover {
+  background: #e7ebf2;
+  color: #4e6488;
+}
+.email-address .email-address-empty {
+  border: 0;
+  padding: 0;
+  min-height: 0;
+  background: none;
+  color: #939ba9;
+  font-size: inherit;
+}
+.email-edit-dialog {
+  font-weight: normal;
+}
+@media (hover: none) {
+  .email-address .email-address-actions {
+    opacity: 1;
+    width: auto;
+    padding-left: 4px;
+  }
+}

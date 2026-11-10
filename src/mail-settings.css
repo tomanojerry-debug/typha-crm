@@ -1,0 +1,238 @@
+.mail-receiving-settings {
+  min-width: 0;
+}
+.mail-exclusion-settings {
+  margin-top: 28px;
+  border: 1px solid #e6e8ec;
+  border-radius: 10px;
+  padding: 0 24px;
+  background: #fff;
+}
+.mail-settings-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 18px 0;
+  box-shadow: none;
+  font-size: 12px;
+}
+.mail-settings-toggle strong {
+  color: #41474f;
+  font-weight: 550;
+}
+.mail-settings-toggle > span {
+  flex: 1;
+  color: #818894;
+  font-size: 11px;
+}
+.mail-settings-toggle > svg {
+  flex-shrink: 0;
+  color: #838b94;
+}
+.mail-settings-toggle .is-open {
+  transform: rotate(180deg);
+}
+.mail-settings-body {
+  display: grid;
+  gap: 22px;
+  padding: 4px 0 20px;
+}
+.mail-settings-body fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.mail-settings-body legend {
+  padding: 0;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #434b55;
+}
+.mail-settings-scope,
+.mail-settings-hint {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #858c96;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.mail-settings-hint {
+  font-size: 11px;
+  margin-top: 10px;
+}
+.mail-intake-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.mail-intake-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid #e5e8ec;
+  padding: 15px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.mail-intake-option.selected {
+  background: #f7f8fa;
+  border-color: #a5aebb;
+}
+.mail-intake-option > span {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.mail-intake-option strong {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-weight: 550;
+  font-size: 12px;
+  color: #414853;
+}
+.mail-intake-option strong small {
+  font-size: 10px;
+  font-weight: 400;
+  color: #707b88;
+}
+.mail-intake-option > span > span {
+  font-size: 11px;
+  line-height: 1.7;
+  color: #818995;
+}
+.mail-settings-body input[type='radio'],
+.mail-settings-body input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  accent-color: #606c7a;
+  margin: 1px 0 0;
+  flex-shrink: 0;
+}
+.mail-setting-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12px;
+  color: #4f5863;
+  margin: 12px 0;
+  cursor: pointer;
+}
+.mail-setting-check small {
+  display: block;
+  font-size: 11px;
+  color: #89909b;
+  line-height: 1.7;
+  margin-top: 4px;
+}
+.mail-setting-text {
+  display: grid;
+  gap: 9px;
+  font-size: 12px;
+  color: #59616c;
+  margin-top: 18px;
+}
+.mail-setting-text textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  resize: vertical;
+  line-height: 1.7;
+  border: 1px solid #dfe3e8;
+  border-radius: 6px;
+  font: inherit;
+  padding: 10px 12px;
+}
+.mail-setting-text textarea:focus {
+  outline: none;
+  border-color: #929ca9;
+  box-shadow: 0 0 0 1px #929ca9;
+}
+.mail-settings-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-top: 1px solid #eceef0;
+  padding-top: 16px;
+}
+.mail-settings-footer > small {
+  font-size: 11px;
+  color: #8a929c;
+}
+.mail-exclusion-preview {
+  background: #f7f8fa;
+  border: 1px solid #e6e8ec;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 12px;
+  color: #59616d;
+}
+.mail-exclusion-preview ul {
+  list-style: none;
+  margin: 14px 0;
+  padding: 0;
+}
+.mail-exclusion-preview li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .mail-intake-options {
+    grid-template-columns: 1fr;
+  }
+  .mail-exclusion-settings {
+    padding: 0 16px;
+  }
+  .mail-settings-toggle {
+    flex-wrap: wrap;
+  }
+  .mail-settings-toggle > span {
+    min-width: 130px;
+  }
+}
+
+.mail-intake-settings {
+  margin: 18px 0 24px;
+  border: 1px solid #e6e8ec;
+  border-radius: 10px;
+  padding: 22px;
+  background: #fff;
+}
+.mail-intake-settings .mail-settings-body {
+  padding: 0;
+  gap: 16px;
+}
+.mail-settings-account {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+  font-size: 12px;
+}
+.mail-settings-account select {
+  max-width: 100%;
+  min-width: 0;
+}
+.mail-notification-settings summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: #68717c;
+}
+@media (max-width: 640px) {
+  .mail-intake-settings {
+    padding: 16px;
+  }
+}

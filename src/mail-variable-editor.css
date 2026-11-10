@@ -1,0 +1,213 @@
+.mail-variable-editor {
+  min-width: 0;
+  width: 100%;
+}
+.mail-variable-input {
+  min-width: 0;
+  min-height: 36px;
+  padding: 7px 2px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.9;
+}
+.mail-variable-input:empty::before {
+  content: attr(data-placeholder);
+  color: var(--theme-muted);
+  pointer-events: none;
+}
+.mail-variable-input:focus-visible {
+  outline: 1px solid var(--theme-line-strong);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.mail-variable-input[aria-disabled='true'] {
+  opacity: 0.7;
+}
+.mail-variable-editor.is-multiline .mail-variable-input {
+  min-height: 230px;
+  padding: 23px 0;
+  font-size: 13px;
+}
+.mail-variable-chip {
+  display: inline;
+  max-width: 100%;
+  padding: 2px 5px;
+  margin: 1px 2px;
+  border: 1px solid var(--theme-line);
+  border-radius: 4px;
+  color: var(--theme-accent);
+  background: var(--theme-selected);
+  font: inherit;
+  line-height: 1.7;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  -webkit-user-modify: read-only;
+  user-select: all;
+  text-align: left;
+}
+.mail-variable-popover {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  max-width: calc(100vw - 20px);
+  max-height: min(480px, calc(100dvh - 20px));
+  overflow-y: auto;
+  border: 1px solid var(--theme-line);
+  border-radius: 9px;
+  padding: 0;
+  background: var(--theme-surface);
+  color: var(--theme-body);
+  box-shadow: 0 12px 36px #1e333326;
+  font-size: 12px;
+}
+.mail-variable-popover > header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-bottom: 1px solid var(--theme-line);
+  padding: 8px 10px;
+}
+.mail-variable-popover strong {
+  font-weight: 500;
+  flex: 1;
+}
+.mail-variable-popover > header button {
+  border: 0;
+  background: transparent;
+  padding: 5px;
+  min-height: 28px;
+}
+.mail-variable-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 8px 10px 0;
+}
+.mail-variable-breadcrumb button {
+  font-size: 11px;
+  color: var(--theme-muted);
+  border: 0;
+  padding: 2px;
+  min-height: 24px;
+  background: transparent;
+}
+.mail-variable-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px;
+  padding: 0 8px;
+  border: 1px solid var(--theme-line);
+  border-radius: 5px;
+}
+.mail-variable-search input {
+  border: 0;
+  min-width: 0;
+  width: 100%;
+  padding: 7px 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 12px;
+}
+.mail-variable-options {
+  padding: 0 5px 6px;
+}
+.mail-variable-options > button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 8px;
+  gap: 8px;
+  font-size: 12px;
+}
+.mail-variable-options > button[data-active='true'] {
+  background: var(--theme-selected);
+}
+.mail-variable-options > button > span:last-child {
+  color: var(--theme-muted);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.mail-variable-options small {
+  display: block;
+  font-size: 11px;
+  color: var(--theme-muted);
+}
+.mail-variable-options .mail-variable-ai {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 0 4px;
+  color: var(--theme-accent);
+  background: var(--theme-selected);
+  border-radius: 3px;
+}
+.mail-variable-options p,
+.mail-variable-note {
+  margin: 10px 12px;
+  color: var(--theme-muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.mail-variable-popover dl {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr);
+  gap: 7px 10px;
+  margin: 12px;
+  overflow-wrap: anywhere;
+}
+.mail-variable-popover dt {
+  color: var(--theme-muted);
+}
+.mail-variable-popover dd {
+  margin: 0;
+}
+.mail-variable-fallback {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px;
+}
+.mail-variable-fallback input {
+  width: auto;
+}
+.mail-variable-fallback-text {
+  display: grid;
+  gap: 5px;
+  margin: 12px;
+  color: var(--theme-muted);
+}
+.mail-variable-fallback-text input {
+  width: 100%;
+  min-width: 0;
+  font-size: 12px;
+}
+.mail-variable-popover > footer {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+.mail-variable-popover > footer button {
+  font-size: 12px;
+}
+@media (pointer: coarse) {
+  .mail-variable-input,
+  .mail-variable-search input,
+  .mail-variable-fallback-text input {
+    font-size: 16px;
+  }
+  .mail-variable-popover button,
+  .mail-variable-fallback {
+    min-height: 44px;
+  }
+  .mail-variable-chip {
+    display: inline-block;
+    min-height: 44px;
+  }
+}

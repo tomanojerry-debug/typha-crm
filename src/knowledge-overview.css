@@ -1,0 +1,111 @@
+.knowledge-overview-browser {
+  min-width: 0;
+  width: 100%;
+  background: #fdfdfe;
+}
+.overview-topline,
+.overview-bottomline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 9px;
+  padding: 12px 16px;
+  color: #8a8494;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.overview-topline {
+  border-bottom: 1px solid #f0edf4;
+}
+.overview-topline button,
+.overview-bottomline button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 27px;
+  padding: 3px 7px;
+  font-size: 10px;
+}
+.overview-bottomline {
+  min-height: 49px;
+  border-top: 1px solid #f0edf4;
+}
+.overview-canvas-shell {
+  background-color: #fdfdfe;
+  background-image: radial-gradient(#dfdce8 0.6px, transparent 0.6px);
+  background-size: 20px 20px;
+}
+.overview-canvas {
+  height: 660px;
+  width: 100%;
+  max-width: 100%;
+}
+.overview-canvas-shell .graph-legend .crm::before {
+  background: #a58cbd;
+}
+.overview-canvas-shell .graph-edge-line {
+  stroke: #b8afc9;
+  opacity: 0.8;
+  stroke-width: 1.2;
+}
+.overview-canvas-shell .graph-edge.is-crm .graph-edge-line {
+  stroke: #a99eb9;
+}
+.overview-canvas-shell .graph-edge.is-connected .graph-edge-line {
+  stroke: #9875b9;
+  opacity: 1;
+  stroke-width: 1.8;
+}
+.overview-canvas-shell .graph-edge:hover .graph-edge-line,
+.overview-canvas-shell .graph-edge:focus-visible .graph-edge-line,
+.overview-canvas-shell .graph-edge.is-selected .graph-edge-line {
+  stroke: #9256ce;
+  opacity: 1;
+  filter: drop-shadow(0 0 3px #9256ce20);
+}
+.overview-canvas-shell .graph-edge text {
+  stroke: #fdfdfe;
+}
+.overview-canvas-shell .graph-edge:hover text,
+.overview-canvas-shell .graph-edge:focus-visible text,
+.overview-canvas-shell .graph-edge.is-selected text {
+  fill: #8247bd;
+}
+.overview-canvas-shell .graph-node.is-crm circle {
+  fill: #f4effa;
+  stroke: #b59acb;
+}
+.overview-canvas-shell .graph-node.is-crm .graph-node-symbol {
+  fill: #9975b5;
+}
+.overview-canvas-shell .graph-node:hover circle,
+.overview-canvas-shell .graph-node:focus-visible circle,
+.overview-canvas-shell .graph-node.is-selected circle {
+  stroke: #9256ce;
+}
+.overview-canvas-shell .graph-node text {
+  stroke: #fdfdfe;
+}
+.overview-canvas-shell .graph-node .graph-node-symbol {
+  stroke: none;
+}
+.overview-zoom {
+  left: auto;
+  right: 16px;
+  color: #8b8496;
+}
+.overview-zoom span {
+  min-width: 36px;
+  text-align: center;
+  font-size: 10px;
+}
+@media (max-width: 750px) {
+  .overview-canvas {
+    height: 480px;
+  }
+  .overview-topline,
+  .overview-bottomline {
+    padding: 10px 12px;
+  }
+}

@@ -1,0 +1,522 @@
+/* Neutral component system inspired by the user's latest references. Visual overrides only;
+   existing navigation, flat card layouts, scrolling and business states remain. */
+:root,
+.attio-shell {
+  --theme-page: #ffffff;
+  --theme-sidebar: #f6f6f8;
+  --theme-surface: #ffffff;
+  --theme-heading: #232329;
+  --theme-body: #38383f;
+  --theme-accent: #252529;
+  --theme-coral: #777781;
+  --theme-warm: #f6f5f9;
+  --theme-muted: #73737c;
+  --theme-line: #e5e5eb;
+  --theme-line-strong: #cfcfd9;
+  --theme-neutral: #f5f5f7;
+  --theme-selected: #efeff4;
+  --theme-hover: #f8f8fb;
+  --theme-accent-hover: #202026;
+  --component-brand: #9b5de0;
+  --ink: var(--theme-heading);
+  --muted: var(--theme-muted);
+  --line: var(--theme-line);
+  --soft: var(--theme-neutral);
+  --accent: var(--theme-accent);
+  --focus-border: var(--theme-accent);
+}
+
+body,
+#root {
+  background: var(--theme-surface);
+}
+
+:root #root:has(.shell.attio-shell) {
+  height: 100dvh;
+  padding: 0;
+}
+
+:root .shell.attio-shell {
+  height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+/* The web workspace fills the viewport; component borders stay inside it. */
+:root .attio-shell .main {
+  margin-left: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--theme-surface);
+  box-shadow: none;
+}
+
+:root .attio-shell .main > :is(.topbar, .agent-topbar) {
+  border-radius: 0;
+}
+
+:root
+  .attio-shell
+  :is(
+    .work-area,
+    .content,
+    .workspace-body,
+    .table-scroll,
+    .kanban-board,
+    .list-workspace,
+    .custom-record-workspace,
+    .agent-page,
+    .chat-page,
+    .reports-workspace,
+    .notes-workspace,
+    .documents-workspace,
+    .entity-settings,
+    .ba-settings,
+    .team-tasks
+  ) {
+  background: transparent;
+}
+
+:root .attio-shell .sidebar {
+  background: var(--theme-sidebar);
+  border-right: 1px solid var(--theme-line);
+}
+
+:root .attio-shell .sidebar-search {
+  min-height: 34px;
+  font-size: 13px;
+  background: #f9f9fb;
+  border: 1px solid #e4e4ec;
+  border-radius: 10px;
+  box-shadow:
+    inset 0 1px 2px #25252f03,
+    0 1px 0 #ffffff;
+}
+
+:root .attio-shell .sidebar nav button,
+:root .attio-shell .sidebar-settings-button {
+  min-height: 34px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+:root .attio-shell .sidebar nav button.active,
+:root .attio-shell .sidebar-settings-button.active {
+  color: var(--theme-heading);
+  background: #ffffff;
+  box-shadow:
+    inset 0 0 0 1px #e5e5ec,
+    0 1px 2px #25252f03;
+}
+
+:root .attio-shell .sidebar nav button:hover:not(.active):not(:disabled),
+:root .attio-shell .sidebar-settings-button:hover:not(.active) {
+  background: #eeeef4;
+}
+
+:root .attio-shell .sidebar nav button.active > svg,
+:root .attio-shell .sidebar nav[aria-label='工作空间导航'] button.active svg {
+  color: var(--component-brand);
+}
+
+:root .attio-shell .sidebar nav[aria-label='工作空间导航'] button:not(.active) svg {
+  color: #777781;
+}
+
+:root .attio-shell :is(.topbar, .view-heading, .view-toolbar, .wf-viewbar, .wf-toolbar) {
+  border-color: var(--theme-line);
+  background: transparent;
+}
+
+:root .attio-shell :is(input, select, textarea) {
+  border-color: var(--theme-line);
+  border-radius: 9px;
+}
+
+:root .attio-shell :is(.search, .wf-search, .notes-search, .ask-typha-trigger) {
+  border-color: var(--theme-line);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow:
+    inset 0 1px 1px #25252f02,
+    0 1px 2px #25252f03;
+}
+
+:root .attio-shell :where(button:not(.icon-button):not(.text-button)) {
+  border-radius: 9px;
+}
+
+/* One graphite primary action; disabled buttons still use their native state. */
+:root
+  .attio-shell
+  :is(button.primary, .send-message, .ask-send, .agent-card-action.is-primary, .report-primary) {
+  color: #ffffff;
+  border-color: var(--theme-accent);
+  background: var(--theme-accent);
+  box-shadow: 0 1px 2px #29292f12;
+}
+
+:root
+  .attio-shell
+  :is(
+    button.primary,
+    .send-message,
+    .ask-send,
+    .agent-card-action.is-primary,
+    .report-primary
+  ):hover:not(:disabled) {
+  color: #ffffff;
+  border-color: var(--theme-accent-hover);
+  background: var(--theme-accent-hover);
+}
+
+:root
+  .attio-shell
+  :is(
+    button.primary,
+    .send-message,
+    .ask-send,
+    .agent-card-action.is-primary,
+    .report-primary
+  ):disabled {
+  color: var(--theme-muted);
+  border-color: var(--theme-line);
+  background: var(--theme-neutral);
+  box-shadow: none;
+}
+
+/* Floating content stays opaque so source text and input values remain clear. */
+:root
+  .attio-shell
+  :is(.popover-panel, .cell-value-popover, .recipient-options, .custom-icon-palette) {
+  color: var(--theme-body);
+  border-color: var(--theme-line);
+  border-radius: 9px;
+  background: var(--theme-surface);
+  box-shadow: 0 8px 24px #29293612;
+}
+
+:root .modal {
+  color: var(--theme-body);
+  border-color: #e4e4ec;
+  border-radius: 12px;
+  background: var(--theme-surface);
+  box-shadow:
+    0 16px 60px #29293624,
+    0 0 0 3px #f5f5fa66;
+}
+
+:root .modal::backdrop {
+  background: #29293626;
+  backdrop-filter: blur(2px);
+}
+
+:root .modal > header {
+  background: #fafafd;
+  border-color: var(--theme-line);
+}
+
+:root .attio-shell .detail-drawer {
+  background: var(--theme-surface);
+  border-color: var(--theme-line);
+}
+
+/* Tables remain dense and scroll within the existing workspace body. */
+:root .attio-shell .workspace-body:has(.record-table) {
+  margin: 0 14px;
+  border: 1px solid #e9e9ef;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+:root .attio-shell :is(.record-table, .wf-table, .resizable-table) {
+  background: var(--theme-surface);
+}
+
+:root .attio-shell :is(.record-table th, .wf-table th, .wf-table .wf-check) {
+  color: #70707b;
+  background: #fafafd;
+  border-color: var(--theme-line);
+}
+
+:root .attio-shell :is(.record-table td, .wf-table td, .wf-table tfoot td) {
+  color: var(--theme-body);
+  background: var(--theme-surface);
+  border-color: #eeeef3;
+}
+
+:root .attio-shell :is(.record-table, .wf-table) tbody tr:hover td,
+:root .attio-shell .wf-table tbody tr:hover .wf-check {
+  background: var(--theme-hover);
+}
+
+:root .attio-shell :is(.record-table, .wf-table) tbody tr.selected td,
+:root .attio-shell .wf-table tbody tr:has(input:checked) .wf-check {
+  background: var(--theme-selected);
+}
+
+:root .attio-shell .table-footer {
+  background: transparent;
+  border-color: var(--theme-line);
+}
+
+:root .attio-shell :is(.agent-composer, .ask-panel-footer form) {
+  border: 1px solid #e4e4ed;
+  border-radius: 10px;
+  background: var(--theme-surface);
+  box-shadow:
+    0 2px 8px #29293605,
+    0 0 0 3px #f6f6fa4d;
+}
+
+:root .attio-shell :is(.agent-card-footer, .compose-footer, .home-workflow-form-footer) {
+  background: #f8f8fb;
+  border-color: var(--theme-line);
+}
+
+:root .attio-shell .entity-ai-filter {
+  color: var(--theme-accent);
+  border-color: var(--theme-line);
+  background: var(--theme-neutral);
+}
+
+:root
+  .attio-shell
+  :is(
+    .custom-icon-grid button[aria-pressed='true'],
+    .entity-ai-filter[aria-pressed='true'],
+    .mail-template-option[aria-selected='true'],
+    .activity-filters button.current,
+    .settings-layout button.current
+  ) {
+  color: var(--theme-accent);
+  border-color: var(--theme-line-strong);
+  background: var(--theme-selected);
+}
+
+:root .attio-shell .notes-view-tabs button.active {
+  color: var(--theme-accent);
+}
+
+:root .attio-shell .notes-view-tabs button.active::after {
+  background: var(--theme-accent);
+}
+
+/* Existing component roles, with light controls and quiet linear tabs. */
+:root .attio-shell :is(.view-selector > summary > svg:first-child, .wf-filter-active) {
+  color: var(--theme-body);
+}
+
+:root
+  .attio-shell
+  :is(
+    .view-toolbar .popover > summary,
+    .wf-viewbar .popover > summary,
+    .wf-toolbar .popover > summary,
+    .view-heading .columns-popover > summary,
+    .view-selector > summary,
+    .view-save > summary
+  ) {
+  min-height: 31px;
+  padding: 5px 10px;
+  color: var(--theme-body);
+  border: 1px solid var(--theme-line);
+  border-radius: 10px;
+  background: var(--theme-surface);
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 1px 2px #29293604;
+  font-size: 12px;
+  line-height: 19px;
+}
+
+:root .attio-shell .view-heading > .view-selector {
+  border-bottom-color: transparent;
+}
+
+:root .attio-shell .view-heading-actions > button {
+  min-height: 31px;
+  padding: 5px 11px;
+  font-size: 12px;
+}
+
+:root .attio-shell :is(.view-toolbar .search, .wf-search) {
+  min-height: 31px;
+}
+
+:root .attio-shell .wf-search {
+  padding: 5px 10px;
+  border: 1px solid var(--theme-line);
+}
+
+:root .attio-shell :is(.search input, .wf-search input) {
+  font-size: 12px;
+}
+
+:root .attio-shell .sidebar-search kbd {
+  border-color: #e5e5eb;
+  border-radius: 5px;
+  background: #ffffff;
+  box-shadow: 0 1px 1px #25252f04;
+}
+
+:root .attio-shell :is(.view-tabs, .document-tabs) {
+  background: transparent;
+  border-radius: 0;
+}
+
+:root .attio-shell :is(.view-tabs button, .document-tabs button, .tabs button) {
+  color: var(--theme-muted);
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+:root
+  .attio-shell
+  :is(
+    .view-tabs button.current,
+    .document-tabs button.current,
+    .tabs button.current,
+    .person-record-tabs > button[aria-selected='true'],
+    .ba-tabs > button[aria-selected='true'],
+    .entity-tabs button[aria-selected='true']
+  ) {
+  color: var(--theme-heading);
+  border-bottom-color: var(--theme-heading);
+  background: transparent;
+}
+
+:root .attio-shell .wf-segments button[aria-pressed='true'] {
+  color: var(--theme-heading);
+  background: var(--theme-surface);
+}
+
+:root .attio-shell .wf-filter-active {
+  border-color: var(--theme-line-strong);
+  background: var(--theme-selected);
+}
+
+:root .attio-shell :is(.wf-column-option input, .entity-settings .attribute-toggle input) {
+  accent-color: var(--theme-accent);
+}
+
+:root .attio-shell .agent-composer textarea::placeholder {
+  color: var(--theme-muted);
+}
+
+/* A long Home overview must grow with its content so its bottom padding remains
+   part of the scroll area, rather than overflowing a flex-shrunk page. */
+:root .attio-shell .agent-page:not(.has-conversation) {
+  flex-shrink: 0;
+}
+
+/* Keep the existing scroll containers and unobtrusive transparent tracks. */
+:root .attio-shell :is(.content, .workspace-body, .table-scroll, .chat-transcript) {
+  scrollbar-width: thin;
+  scrollbar-color: #d0d0da transparent;
+}
+
+@supports selector(::-webkit-scrollbar) {
+  :root .attio-shell :is(.content, .workspace-body, .table-scroll, .chat-transcript) {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+
+  :root
+    .attio-shell
+    :is(.content, .workspace-body, .table-scroll, .chat-transcript)::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  :root
+    .attio-shell
+    :is(.content, .workspace-body, .table-scroll, .chat-transcript)::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  :root
+    .attio-shell
+    :is(
+      .content,
+      .workspace-body,
+      .table-scroll,
+      .chat-transcript
+    )::-webkit-scrollbar-track:vertical {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  :root
+    .attio-shell
+    :is(.content, .workspace-body, .table-scroll, .chat-transcript)::-webkit-scrollbar-thumb {
+    min-height: 32px;
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: #d0d0da;
+    background-clip: padding-box;
+  }
+
+  :root
+    .attio-shell
+    :is(.content, .workspace-body, .table-scroll, .chat-transcript)::-webkit-scrollbar-thumb:hover {
+    background-color: #b6b6c2;
+  }
+
+  :root
+    .attio-shell
+    :is(.content, .workspace-body, .table-scroll, .chat-transcript)::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  :root
+    .attio-shell
+    :is(.content, .workspace-body, .table-scroll, .chat-transcript)::-webkit-scrollbar-button {
+    display: none;
+  }
+}
+
+/* Preserve the existing desktop conversation height within the content area. */
+@media (min-width: 1100px) and (min-height: 650px) {
+  :root .attio-shell .has-conversation {
+    height: 100%;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 839px) {
+  :root .attio-shell .sidebar {
+    background: var(--theme-sidebar);
+    border-right-color: var(--theme-line);
+  }
+
+  :root .attio-shell .sidebar nav button,
+  :root .attio-shell .sidebar-settings-button {
+    min-height: 44px;
+  }
+
+  :root
+    .attio-shell
+    :is(
+      .view-toolbar .popover > summary,
+      .wf-viewbar .popover > summary,
+      .wf-toolbar .popover > summary,
+      .view-heading .columns-popover > summary,
+      .view-selector > summary,
+      .view-save > summary,
+      .view-heading-actions > button,
+      .view-toolbar .search,
+      .wf-search
+    ) {
+    min-height: 44px;
+  }
+
+  :root .attio-shell .workspace-body:has(.record-table) {
+    margin: 0 8px;
+    border-radius: 7px;
+  }
+}

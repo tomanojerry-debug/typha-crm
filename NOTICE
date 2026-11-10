@@ -1,0 +1,13 @@
+Typha CRM
+Project code: MIT License, Copyright (c) 2026 tomanojerry-debug and contributors.
+
+Third-party components retain their respective licenses:
+- prompt-kit: MIT; see third_party/prompt-kit/LICENSE and README.md.
+- Open Sans: SIL Open Font License 1.1; see third_party/open-sans/OFL.txt.
+- Manrope: SIL Open Font License 1.1; see third_party/manrope/OFL.txt.
+- Geist: SIL Open Font License 1.1; see third_party/geist/OFL.txt.
+
+The original SVG mark at src/assets/typha-mark.svg is distributed with this
+project under the MIT License. Screenshots use a disposable synthetic dataset.
+Third-party npm and optional Python dependencies are not relicensed by this
+project; their original licenses apply. Model weights are downloaded separately.

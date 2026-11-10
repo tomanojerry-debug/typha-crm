@@ -1,0 +1,416 @@
+.attribute-dialog {
+  width: 650px;
+}
+.attribute-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.attribute-dialog > header,
+.attribute-dialog .form-footer {
+  flex-shrink: 0;
+}
+.attribute-dialog > form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.attribute-dialog .attribute-fields {
+  min-height: 0;
+  overflow-y: auto;
+}
+.attribute-dialog .attribute-fields {
+  display: grid;
+  gap: 15px;
+  padding: 22px 24px;
+  border: 0;
+  margin: 0;
+  min-width: 0;
+}
+.attribute-fields label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  font-size: 12px;
+  color: #687080;
+}
+.attribute-fields input,
+.attribute-fields select,
+.attribute-fields textarea {
+  width: 100%;
+}
+.attribute-fields p {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #818794;
+}
+.attribute-fields .attribute-scope {
+  color: #687080;
+}
+.attribute-scope strong {
+  color: #3e4551;
+  font-weight: 550;
+}
+.attribute-ai-config {
+  border: 1px solid #e1e2e9;
+  border-radius: 8px;
+  padding: 15px;
+  display: grid;
+  gap: 12px;
+  background: #fcfcfe;
+  min-width: 0;
+}
+.attribute-fields .attribute-toggle,
+.attribute-fields .attribute-review {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.attribute-fields input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+}
+.attribute-toggle input {
+  margin-left: auto !important;
+}
+.attribute-toggle svg,
+.attribute-ai-heading svg {
+  color: #8a80a5;
+}
+.attribute-model-name,
+.attribute-meta {
+  color: #9499a4;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.attribute-ai-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+}
+.attribute-ai-heading span {
+  margin-left: auto;
+  color: #9296a1;
+  font-size: 10px;
+}
+.attribute-ai-heading .text-button {
+  min-height: 20px;
+  font-size: 11px;
+}
+.attribute-options {
+  display: grid;
+  gap: 9px;
+}
+.attribute-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.attribute-preview {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid #e9eaef;
+  padding-top: 18px;
+}
+.attribute-preview h3 {
+  font-size: 13px;
+  font-weight: 550;
+}
+.attribute-diff {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.attribute-diff > div {
+  min-width: 0;
+  border: 1px solid #e8e9ee;
+  padding: 12px;
+  border-radius: 6px;
+}
+.attribute-diff small {
+  color: #989da8;
+  font-size: 10px;
+}
+.attribute-diff p {
+  margin-top: 8px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #4c5361;
+}
+.attribute-evidence {
+  font-size: 11px;
+  color: #6b7484;
+}
+.attribute-evidence summary {
+  cursor: pointer;
+  padding: 7px 0;
+}
+.attribute-evidence > details {
+  border-top: 1px solid #eceef2;
+  margin-top: 5px;
+}
+.attribute-evidence pre {
+  font: inherit;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #747d8b;
+  margin: 5px 0 12px;
+}
+.company-attributes {
+  border-top: 1px solid #e9ebf0;
+  padding: 15px 0;
+  margin-top: 16px;
+}
+.attribute-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: #737b89;
+}
+.attribute-section-heading > strong {
+  flex: 1;
+  font-weight: 500;
+}
+.company-attribute-row {
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) minmax(0, 1.2fr);
+  gap: 12px;
+  margin: 12px 0;
+  font-size: 11px;
+  align-items: start;
+}
+.company-attribute-row > span {
+  color: #9299a6;
+  overflow-wrap: anywhere;
+}
+.company-attribute-row svg {
+  vertical-align: -2px;
+  color: #9388a9;
+}
+.attribute-value {
+  display: block;
+  padding: 0;
+  min-height: 18px;
+  border: 0;
+  background: none;
+  color: #667083;
+  font-size: inherit;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.record-table .attribute-value {
+  width: 100%;
+  min-height: 25px;
+  padding: 2px 5px;
+  max-width: 270px;
+}
+.attribute-value:disabled {
+  opacity: 1;
+}
+.attribute-fields .notice {
+  font-size: 11px;
+}
+.attribute-cell,
+.attribute-column-heading {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.attribute-cell > .attribute-value,
+.attribute-column-heading > .popover {
+  flex: 1;
+  min-width: 0;
+}
+.attribute-column-heading > .popover > summary {
+  padding-right: 14px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.attribute-star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 23px;
+  width: 23px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: #a49bb4;
+}
+.attribute-star:not(:disabled):hover,
+.attribute-star.is-generated {
+  background: #f0edf6;
+  color: #807096;
+}
+.attribute-star:disabled {
+  opacity: 0.65;
+}
+.attribute-column-star:disabled {
+  opacity: 1;
+}
+/* Table attributes edit in place; focus stays neutral like the other forms. */
+.attribute-table-cell {
+  width: 100%;
+  white-space: normal;
+}
+.attribute-table-cell.is-editing .attribute-cell {
+  align-items: flex-start;
+}
+.attribute-inline-editor {
+  flex: 1;
+  min-width: 0;
+}
+.attribute-inline-editor textarea,
+.attribute-inline-editor input:not([type='checkbox']),
+.attribute-inline-editor select {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.attribute-inline-editor textarea {
+  display: block;
+  resize: vertical;
+  line-height: 1.65;
+}
+.attribute-inline-options {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid #dce0e7;
+  border-radius: 4px;
+}
+.attribute-inline-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: normal;
+  font-size: 12px;
+}
+.attribute-inline-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding-top: 4px;
+}
+.attribute-inline-actions > span {
+  flex: 1;
+  color: #9298a3;
+  font-size: 9px;
+  white-space: normal;
+}
+.attribute-inline-actions .icon-button {
+  width: 23px;
+  min-height: 22px;
+  padding: 3px;
+  flex-shrink: 0;
+}
+.attribute-cell-status {
+  flex: 1;
+  color: #8c819d;
+  font-size: 12px;
+}
+.attribute-inline-error,
+.attribute-inline-hint {
+  font-size: 10px;
+  margin: 4px 0 0 28px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.attribute-inline-error {
+  color: #b45e59;
+}
+.attribute-inline-hint {
+  color: #959ba5;
+}
+.attribute-inline-editor .attribute-inline-error {
+  margin-left: 0;
+}
+.attribute-generation-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 20px;
+  color: #8a7c9d;
+  background: #faf9fc;
+  font-size: 11px;
+}
+.attribute-generation-bar button {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 3px 7px;
+  min-height: 24px;
+}
+.attribute-cell-evidence {
+  margin-top: 7px;
+  padding: 10px;
+  border: 1px solid #e8e5ee;
+  border-radius: 5px;
+  font-size: 11px;
+  color: #7f778c;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.attribute-cell-evidence p {
+  margin: 6px 0;
+  line-height: 1.6;
+}
+.attribute-cell-evidence summary {
+  cursor: pointer;
+  padding: 5px 0;
+}
+.attribute-cell-evidence pre {
+  white-space: pre-wrap;
+  font: inherit;
+  line-height: 1.7;
+}
+.resizable-table .is-editing .attribute-cell {
+  cursor: text;
+}
+.record-table .attribute-table-cell .attribute-value {
+  max-width: none;
+}
+.record-table td:has(.attribute-table-cell.is-editing) .cell-expand-button {
+  display: none;
+}
+.attribute-spin {
+  animation: attribute-spin 1s linear infinite;
+}
+@keyframes attribute-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .attribute-spin {
+    animation: none;
+  }
+}
+@media (max-width: 600px) {
+  .attribute-dialog {
+    max-width: calc(100vw - 20px);
+  }
+  .attribute-dialog .attribute-fields {
+    padding: 17px;
+  }
+  .attribute-diff {
+    grid-template-columns: 1fr;
+  }
+  .attribute-ai-heading {
+    flex-wrap: wrap;
+  }
+}
