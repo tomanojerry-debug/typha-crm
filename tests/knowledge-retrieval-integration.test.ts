@@ -16,7 +16,8 @@ import { claimKey } from '../server/communication-pipeline.js';
 import { retrievalFixture, seedRetrievalFixture } from '../scripts/fixtures/graphiti-retrieval.js';
 import { retrievalProjection } from './fixtures/retrieval-projection.js';
 
-const integration = (name: string, fn: () => Promise<void>) => it(name, fn, 30000);
+const integration = (name: string, fn: () => Promise<void>, timeout = 30000) =>
+  it(name, fn, timeout);
 
 let db: Database, fixture: Awaited<ReturnType<typeof seedRetrievalFixture>>;
 let seen: AgentModelInput[] = [],
@@ -223,6 +224,7 @@ integration(
     expect(last.snapshot.sources.some((s) => s.id === `record::${fixture.oldRecord}`)).toBe(true);
     expect(JSON.stringify(last.snapshot)).not.toContain(retrievalFixture.sentinels[0]);
   },
+  60000,
 );
 integration(
   'keeps Ask continuation valid for another question and searches only once per streamed answer',

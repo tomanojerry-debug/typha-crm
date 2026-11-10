@@ -140,6 +140,7 @@ it('persists a page-labelled session and resumes all recent turns without a cont
   ).toHaveLength(4);
 });
 
+// Twelve sequential PGlite turns verify history retention, not a latency SLO.
 it('supplies exactly the latest ten completed rounds while retaining the entire session log', async () => {
   const id = randomUUID();
   for (let turn = 1; turn <= 12; turn++) await send(id, `问题${turn}`);
@@ -154,7 +155,7 @@ it('supplies exactly the latest ten completed rounds while retaining the entire 
       ])
     ).rows,
   ).toHaveLength(24);
-});
+}, 15000);
 
 it('replays successful requests exactly and rejects a reused request id with different input', async () => {
   const id = randomUUID(),
