@@ -38,6 +38,7 @@ import * as outgoing from './outgoing.js';
 import * as mailTemplates from './mail-templates.js';
 import * as documents from './documents.js';
 import * as notes from './notes.js';
+import { importShopifyInboxMessage } from './shopify-inbox.js';
 import * as prospects from './prospects.js';
 import * as prospectIntake from './prospect-intake.js';
 import { noteSourceCandidates } from './note-sources.js';
@@ -1722,6 +1723,13 @@ export function createApp(db: Database, options: AppOptions) {
         created_by: ctx.actorId,
       });
     }, 201),
+  );
+  app.post(
+    `${customerPath}/shopify/messages`,
+    business(
+      (ctx, req) => importShopifyInboxMessage(ctx, v.uuid.parse(req.params.customerId), req.body),
+      201,
+    ),
   );
   app.get(
     `${customerPath}/audit`,
