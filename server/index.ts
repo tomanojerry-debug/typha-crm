@@ -6,6 +6,7 @@ import { localEmbeddingTransport } from './local-embedding-transport.js';
 import { startSourceIndexWorker } from './source-index.js';
 import { startKnowledgeWorker } from './knowledge.js';
 import express from 'express';
+import { z } from 'zod';
 import { resolve } from 'node:path';
 import { createApp } from './app.js';
 import { migrate, openDatabase } from './db.js';
@@ -31,6 +32,27 @@ if (localAccessEmail) {
     databaseUrl: process.env.DATABASE_URL,
   });
 }
+const whatsappSettings = {
+  appSecret: process.env.WHATSAPP_APP_SECRET?.trim(),
+  verifyToken: process.env.WHATSAPP_VERIFY_TOKEN?.trim(),
+  wabaId: process.env.WHATSAPP_WABA_ID?.trim(),
+  phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID?.trim(),
+  workspaceId: process.env.WHATSAPP_WORKSPACE_ID?.trim().toLowerCase(),
+  actorId: process.env.WHATSAPP_INTAKE_ACTOR_ID?.trim().toLowerCase(),
+};
+const whatsappConfigSchema = z.object({
+  appSecret: z.string().min(1).max(512),
+  verifyToken: z.string().min(1).max(512),
+  wabaId: z.string().regex(/^\d{1,30}$/),
+  phoneNumberId: z.string().regex(/^\d{1,30}$/),
+  workspaceId: z.uuid(),
+  actorId: z.uuid(),
+});
+const whatsapp = Object.values(whatsappSettings).some(Boolean)
+  ? whatsappConfigSchema.safeParse(whatsappSettings)
+  : undefined;
+if (whatsapp && !whatsapp.success)
+  throw new Error('请完整配置 WhatsApp 收件的凭据、账号及工作空间归属');
 const db = await openDatabase({
   url: process.env.DATABASE_URL,
   dataDir: process.env.DATA_DIR ?? '.local/postgres',
@@ -38,6 +60,13 @@ const db = await openDatabase({
 let localActorId: string | undefined;
 try {
   await migrate(db);
+  if (whatsapp) {
+    const membership = await db.query(
+      'SELECT 1 FROM memberships WHERE workspace_id=$1 AND actor_id=$2 AND active',
+      [whatsapp.data.workspaceId, whatsapp.data.actorId],
+    );
+    if (!membership.rows.length) throw new Error('WhatsApp 收件负责人必须是工作空间的有效成员');
+  }
   if (localAccessEmail) {
     localActorId = (
       await db.query<{ id: string }>('SELECT id FROM users WHERE email = $1', [localAccessEmail])
@@ -73,6 +102,7 @@ const stopKnowledgeWorker = startKnowledgeWorker(
     : undefined,
 );
 const app = createApp(db, {
+  whatsapp: whatsapp?.data,
   embeddings,
   knowledgeEnabled,
   knowledgeSearch: knowledgeEnabled

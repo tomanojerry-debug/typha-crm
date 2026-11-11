@@ -3,6 +3,8 @@ import * as businessActivities from './business-activities.js';
 import type { ActivityModelOptions } from './activity-model.js';
 import * as customObjects from './custom-objects.js';
 import * as wechat from './wechat.js';
+import * as whatsappInbox from './whatsapp-inbox.js';
+import { parseWhatsAppWebhook, verifyWhatsAppChallenge } from './whatsapp-meta.js';
 import {
   knowledgeView,
   knowledgeGraphView,
@@ -81,6 +83,7 @@ interface AppOptions {
   agent?: AgentModelOptions;
   attributes?: AttributeModelOptions;
   wechat?: wechat.WeChatOptions;
+  whatsapp?: whatsappInbox.WhatsAppInboxConfig;
   outgoing?: outgoing.OutgoingOptions;
   mail?: mail.MailOptions;
   origin: string;
@@ -101,6 +104,33 @@ export function createApp(db: Database, options: AppOptions) {
   });
   app.disable('x-powered-by');
   app.use(helmet({ contentSecurityPolicy: options.development ? false : undefined }));
+  const whatsappConfig = () => {
+    if (!options.whatsapp) throw new ApiError(404, 'WhatsApp 收件未启用');
+    return options.whatsapp;
+  };
+  app.get('/webhooks/whatsapp', (req, res) => {
+    const challenge = verifyWhatsAppChallenge(whatsappConfig(), req.query);
+    res.set('Cache-Control', 'no-store').type('text/plain').send(challenge);
+  });
+  app.post(
+    '/webhooks/whatsapp',
+    (req, res, next) => {
+      whatsappConfig();
+      res.set('Cache-Control', 'no-store');
+      const encoding = req.get('content-encoding');
+      if (!req.is('application/json') || (encoding && encoding.toLowerCase() !== 'identity'))
+        throw new ApiError(415, '请提交未压缩的 JSON 请求');
+      next();
+    },
+    express.raw({ type: 'application/json', limit: '256kb', inflate: false }),
+    async (req, res) => {
+      const config = whatsappConfig();
+      if (!Buffer.isBuffer(req.body)) throw new ApiError(400, 'Webhook 请求为空');
+      const messages = parseWhatsAppWebhook(config, req.body, req.get('x-hub-signature-256'));
+      const { inserted } = await whatsappInbox.ingestWhatsAppMessages(db, config, messages);
+      res.json({ received: inserted });
+    },
+  );
   app.use('/api', (_req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     next();
@@ -222,6 +252,21 @@ export function createApp(db: Database, options: AppOptions) {
       const result = await scoped(db, res.locals.actor.id, workspaceId, (ctx) => fn(ctx, req));
       res.status(status).json(result);
     };
+  app.get(
+    '/api/whatsapp/inbox',
+    business((ctx, req) => whatsappInbox.listWhatsAppInbox(ctx, whatsappConfig(), req.query)),
+  );
+  app.post(
+    '/api/whatsapp/inbox/:id/archive',
+    business((ctx, req) =>
+      whatsappInbox.archiveWhatsAppMessage(
+        ctx,
+        whatsappConfig(),
+        v.uuid.parse(req.params.id),
+        req.body,
+      ),
+    ),
+  );
   const attributeOptions: AttributeModelOptions = {
     ...(options.attributes ?? { key: options.mail?.key }),
     knowledgeSearch: options.knowledgeSearch ?? options.attributes?.knowledgeSearch,
