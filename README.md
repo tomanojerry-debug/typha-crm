@@ -4,7 +4,7 @@
 
 [![Typha CRM 产品演示封面，点击观看（1 分 41 秒）](docs/images/typha-crm-demo-cover-forest-detail.jpg)][product-demo-video]
 
-[观看产品演示（1:41）][product-demo-video] · [在线体验](https://tomanojerry-debug.github.io/typha-crm/) · [使用场景](#主要使用场景) · [产品介绍](https://tomanojerry-debug.github.io/typha-crm/about.html) · [本机部署](docs/getting-started.md) · [技术架构](docs/architecture.md)
+[在线观看产品演示（1:41）][product-demo-video] · [在线体验](https://tomanojerry-debug.github.io/typha-crm/) · [使用场景](#主要使用场景) · [产品介绍](https://tomanojerry-debug.github.io/typha-crm/about.html) · [本机部署](docs/getting-started.md) · [技术架构](docs/architecture.md)
 
 Typha 是面向小型电商品牌与客户沟通团队的 AI CRM。它将已关联的邮件、文档和业务笔记组织到公司、联系人和项目下，帮助你跟进咨询、准备回复，并把客户反馈留给后续产品改进。
 
@@ -12,7 +12,7 @@ Typha 是面向小型电商品牌与客户沟通团队的 AI CRM。它将已关�
 
 > 软件免费，当前支持企业本机部署，模型 API 费用由企业自行承担。后续计划支持部署在企业自行租用的云服务器上。当前为开发预览版本，界面以中文为主；AI 处理会将选定的任务上下文发送至模型服务。
 
-[product-demo-video]: https://github.com/tomanojerry-debug/typha-crm/releases/tag/demo-2026-11-13
+[product-demo-video]: https://tomanojerry-debug.github.io/typha-crm/watch.html
 
 ## 为什么做 Typha
 
