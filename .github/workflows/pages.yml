@@ -49,6 +49,13 @@ jobs:
       - name: Build product experience
         run: npm run demo:build
 
+      - name: Include the public product demo video
+        run: |
+          curl --fail --location --silent --show-error --retry 3 --retry-all-errors --max-time 60 \
+            'https://github.com/tomanojerry-debug/typha-crm/releases/download/demo-2026-11-13/Typha-CRM-v7.mp4' \
+            --output .pages-build/assets/typha-crm-demo-v7.mp4
+          echo 'e954533e26145a2a7f26b1c7924a49d5da164bb04ce4a049623c118e67638f24  .pages-build/assets/typha-crm-demo-v7.mp4' | sha256sum --check
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
