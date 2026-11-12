@@ -6,12 +6,14 @@ import { AssociatedProjects } from './AssociatedProjects';
 import { RecordRelations } from './Relationships';
 import { CompanyAttributes } from './CompanyAttributes';
 import { PersonDetail, CompanyPeople } from './People';
+import { TeamTasks } from './TeamTasks';
 import {
   cloneElement,
   isValidElement,
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   type FormEvent,
@@ -29,7 +31,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { api, HttpError, transientReadFailure } from './api';
+import { api, bindApiActor, HttpError, transientReadFailure } from './api';
 import { ActivityTimeline, ProjectWorkspace } from './RecordWorkspace';
 import { EmailAddress } from './EmailAddress';
 import { MailComposer, OutgoingPanel } from './MailComposer';
@@ -50,6 +52,16 @@ import {
 } from '../shared/domain';
 
 type Workspace = SessionInfo['workspaces'][number];
+const sessionChangeKey = 'typha-session-change';
+
+function announceSessionChange() {
+  try {
+    localStorage.setItem(sessionChangeKey, crypto.randomUUID());
+  } catch {
+    // Tabs also revalidate on focus when storage is unavailable.
+  }
+}
+
 type ModalState =
   | {
       kind: 'customer';
@@ -73,7 +85,7 @@ const errorText = (error: unknown) => (error instanceof Error ? error.message : 
 function Brand() {
   return (
     <div className="brand">
-      light<span>crm</span>
+      Typha <span>AI CRM</span>
     </div>
   );
 }
@@ -178,6 +190,31 @@ function Modal({
 function Login({ onLogin }: { onLogin: () => void }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState('');
+
+  const [email, setEmail] = useState('');
+  const [fixtureAccounts, setFixtureAccounts] = useState<{ label: string; email: string }[]>([]);
+  const passwordInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    api<unknown>('/fixture-login-accounts', { signal: controller.signal })
+      .then((rows) => {
+        if (
+          !controller.signal.aborted &&
+          Array.isArray(rows) &&
+          rows.length === 4 &&
+          rows.every(
+            (row) =>
+              row &&
+              typeof row.label === 'string' &&
+              typeof row.email === 'string' &&
+              row.email.endsWith('@handoff.invalid'),
+          )
+        )
+          setFixtureAccounts(rows);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -188,6 +225,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
         method: 'POST',
         body: { email: form.get('email'), password: form.get('password') },
       });
+      announceSessionChange();
       onLogin();
     } catch (e) {
       setError(errorText(e));
@@ -219,12 +257,34 @@ function Login({ onLogin }: { onLogin: () => void }) {
       <section className="login-form">
         <span className="eyebrow">WELCOME BACK</span>
         <h2>回到你的工作空间</h2>
-        <p className="muted">登录后，继续处理获授权的客户与项目。</p>
+        <p className="muted">用管理员创建的邮箱账号登录，进入对应的客户工作台或协作待办。</p>
+        {fixtureAccounts.length > 0 && (
+          <div className="login-fixture" aria-label="验收账号">
+            <p>验收账号 · 选择后填写本机密码</p>
+            <div>
+              {fixtureAccounts.map((account) => (
+                <button
+                  key={account.email}
+                  type="button"
+                  onClick={() => {
+                    setEmail(account.email);
+                    passwordInput.current?.focus();
+                  }}
+                >
+                  <strong>{account.label}</strong>
+                  <span>{account.email}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <form onSubmit={submit}>
           <Field label="邮箱">
             <input
               type="email"
               name="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
               autoComplete="username"
               required
               placeholder="you@example.com"
@@ -234,6 +294,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
             <input
               type="password"
               name="password"
+              ref={passwordInput}
               autoComplete="current-password"
               required
               placeholder="输入账号密码"
@@ -270,23 +331,47 @@ export function App() {
     [starting, setStarting] = useState(true),
     [sessionError, setSessionError] = useState('');
   const [workspaceId, setWorkspaceId] = useState('');
-  const loadSession = useCallback(async () => {
+  const sessionLoad = useRef<AbortController | null>(null);
+  const loadSession = useCallback(async (background = false) => {
+    sessionLoad.current?.abort();
+    const controller = new AbortController();
+    sessionLoad.current = controller;
     try {
-      const s = await api<SessionInfo>('/session');
+      const s = await api<SessionInfo>('/session', { signal: controller.signal });
+      if (controller.signal.aborted) return;
       setSession(s);
       setWorkspaceId((current) =>
         s.workspaces.some((w) => w.id === current) ? current : (s.workspaces[0]?.id ?? ''),
       );
       setSessionError('');
     } catch (e) {
+      if (controller.signal.aborted) return;
+      if (background && transientReadFailure(e)) return;
       setSession(null);
       setSessionError(e instanceof HttpError && e.status === 401 ? '' : errorText(e));
     } finally {
-      setStarting(false);
+      if (!controller.signal.aborted) setStarting(false);
     }
   }, []);
+  useLayoutEffect(() => {
+    bindApiActor(session?.actor.id ?? '');
+  }, [session?.actor.id]);
   useEffect(() => {
     void loadSession();
+    const focus = () => void loadSession(true);
+    const storage = (event: StorageEvent) => {
+      if (event.key !== sessionChangeKey) return;
+      setStarting(true);
+      setSession(null);
+      void loadSession();
+    };
+    window.addEventListener('focus', focus);
+    window.addEventListener('storage', storage);
+    return () => {
+      sessionLoad.current?.abort();
+      window.removeEventListener('focus', focus);
+      window.removeEventListener('storage', storage);
+    };
   }, [loadSession]);
   if (starting)
     return (
@@ -309,9 +394,11 @@ export function App() {
   async function logout() {
     try {
       await api('/auth/logout', { method: 'POST', body: {} });
+      sessionLoad.current?.abort();
       setSession(null);
+      announceSessionChange();
     } catch (e) {
-      if (e instanceof HttpError && e.status === 401) setSession(null);
+      if (e instanceof HttpError && e.status === 401) void loadSession();
       else setSessionError(errorText(e));
     }
   }
@@ -324,9 +411,34 @@ export function App() {
         {session.auth_mode !== 'local' && <button onClick={logout}>退出登录</button>}
       </div>
     );
+  const workspaceKey = `${session.actor.id}:${workspace.id}:${workspace.role}:${workspace.workspace_mode ?? 'crm'}`;
+  if (workspace.workspace_mode === 'tasks')
+    return (
+      <main className="ba-collaboration-workspace" key={workspaceKey}>
+        <header className="ba-collaboration-account">
+          <Brand />
+          <span>{session.actor.display_name} · 任务协作成员</span>
+          {session.workspaces.length > 1 && (
+            <label>
+              工作空间
+              <select value={workspace.id} onChange={(event) => setWorkspaceId(event.target.value)}>
+                {session.workspaces.map((space) => (
+                  <option value={space.id} key={space.id}>
+                    {space.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {session.auth_mode === 'password' && <button onClick={logout}>退出登录</button>}
+        </header>
+        {sessionError && <p role="alert">{sessionError}</p>}
+        <TeamTasks workspace={workspace.id} taskOnly onUnauthorized={() => void loadSession()} />
+      </main>
+    );
   return (
     <WorkspaceApp
-      key={workspace.id}
+      key={workspaceKey}
       session={session}
       workspace={workspace}
       onWorkspace={setWorkspaceId}
@@ -369,7 +481,10 @@ function WorkspaceApp({
   useEffect(() => {
     const controller = new AbortController();
     api<Member[]>('/members', { workspace: workspace.id, signal: controller.signal })
-      .then(setMembers)
+      .then((items) => {
+        if (!controller.signal.aborted)
+          setMembers(items.filter((item) => item.workspace_mode !== 'tasks'));
+      })
       .catch((e) => {
         if (e.name !== 'AbortError') handleError(e);
       });

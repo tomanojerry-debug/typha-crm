@@ -111,6 +111,20 @@ export interface ActivityComment {
   created_at: string;
 }
 export type ActivityTaskStatus = 'open' | 'in_progress' | 'completed';
+export const collaborationAttachmentLimit = 1024 * 1024;
+export const collaborationAttachmentTypes = {
+  pdf: 'application/pdf',
+  csv: 'text/csv',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+} as const;
+export interface CollaborationAttachmentMetadata {
+  filename: string;
+  content_type: (typeof collaborationAttachmentTypes)[keyof typeof collaborationAttachmentTypes];
+  size_bytes: number;
+}
+export interface CollaborationTaskAttachment extends CollaborationAttachmentMetadata {
+  content_base64: string;
+}
 export interface ActivityTask {
   id: string;
   activity_id: string;
@@ -118,6 +132,7 @@ export interface ActivityTask {
   project_id: string | null;
   title: string;
   assignee_id: string;
+  assignee_display_name?: string | null;
   created_by: string;
   status: ActivityTaskStatus;
   due_date: string | null;
@@ -126,6 +141,36 @@ export interface ActivityTask {
   version: number;
   created_at: string;
   updated_at: string;
+  task_only?: boolean;
+  collaboration_brief?: string | null;
+  attachment_required?: boolean;
+  mail_cc_actor_id?: string | null;
+  revoked_at?: string | null;
+  attachment?: CollaborationAttachmentMetadata | null;
+}
+export interface CollaborationTask {
+  id: string;
+  task_only: true;
+  collaboration_brief: string;
+  title: string;
+  status: ActivityTaskStatus;
+  due_date: string | null;
+  result: string | null;
+  result_record_id?: never;
+  version: number;
+  created_at: string;
+  updated_at: string;
+  attachment_required: boolean;
+  attachment: CollaborationAttachmentMetadata | null;
+}
+export type AssignedActivityTask = ActivityTask | CollaborationTask;
+export interface ActivityTaskMailDraft {
+  draft_id: string;
+  customer_id: string;
+  project_id: string | null;
+  result: string;
+  attachment: CollaborationTaskAttachment;
+  cc: { actor_id: string; display_name: string; email: string } | null;
 }
 export interface ActivityDetail extends BusinessActivity {
   can_edit?: boolean;
@@ -137,6 +182,12 @@ export interface ActivityMember {
   actor_id: string;
   display_name: string;
   can_assign: boolean;
+}
+export interface ActivityCollaborationMember {
+  actor_id: string;
+  display_name: string;
+  workspace_mode: 'crm' | 'tasks';
+  can_receive_cc: boolean;
 }
 export interface GenerateActivitiesInput {
   customer_id: string;

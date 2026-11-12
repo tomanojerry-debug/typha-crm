@@ -1323,6 +1323,36 @@ td small {
   font-size: 13px;
   margin-bottom: 30px;
 }
+.login-fixture {
+  margin-bottom: 22px;
+}
+.login-fixture p {
+  font-size: 12px;
+  color: #53647b;
+  margin: 0 0 8px;
+}
+.login-fixture > div {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 152px), 1fr));
+  gap: 8px;
+}
+.login-fixture button {
+  display: grid;
+  gap: 3px;
+  border: 1px solid #dce3ed;
+  background: #f8fafc;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-align: left;
+}
+.login-fixture button:hover {
+  border-color: #8ca5c6;
+}
+.login-fixture button span {
+  font-size: 11px;
+  color: #53647b;
+  overflow-wrap: anywhere;
+}
 .login-form form {
   display: grid;
   gap: 21px;

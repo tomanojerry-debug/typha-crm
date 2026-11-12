@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { Customer, Project } from '../shared/domain.js';
+import type { Customer, Project, WorkspaceMode } from '../shared/domain.js';
 import { ApiError, requireAdmin, type Context } from './security.js';
 import { communicationJoin, communicationSelect } from './communications.js';
 
@@ -30,12 +30,15 @@ export async function project(ctx: Context, customerId: string, projectId: strin
 export async function validateOwner(ctx: Context, owner: unknown, customerId?: string) {
   if (owner === undefined || owner === null) return;
   const member = (
-    await ctx.tx.query<{ role: string }>(
-      'SELECT role FROM workspace_people WHERE workspace_id = $1 AND actor_id = $2 AND active',
+    await ctx.tx.query<{ role: string; workspace_mode: WorkspaceMode }>(
+      `SELECT p.role, COALESCE(to_jsonb(p)->>'workspace_mode', 'crm') AS workspace_mode
+       FROM workspace_people p WHERE p.workspace_id = $1 AND p.actor_id = $2 AND p.active`,
       [ctx.workspaceId, owner],
     )
   ).rows[0];
   if (!member) throw new ApiError(400, '负责人必须是当前工作空间的有效成员');
+  if (member.workspace_mode === 'tasks')
+    throw new ApiError(400, '仅处理协作待办的成员不能设为客户或项目负责人');
   // Assignment doesn't grant access. Only admins manage access; users cannot
   // turn an assignee field into an implicit permission change.
   if (!customerId && member.role !== 'admin')

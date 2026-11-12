@@ -5,6 +5,18 @@ export function isDemoRuntime(): boolean {
   return false;
 }
 
+let sessionActor = '';
+
+export function bindApiActor(actorId: string) {
+  sessionActor = actorId;
+}
+
+function actorHeader(path: string): Record<string, string> {
+  return sessionActor && path !== '/session' && path !== '/auth/login'
+    ? { 'x-expected-actor-id': sessionActor }
+    : {};
+}
+
 export class HttpError extends Error {
   constructor(
     message: string,
@@ -26,7 +38,11 @@ export async function watchApi<T>(
 ): Promise<void> {
   const response = await fetch(`/api${path}`, {
     credentials: 'same-origin',
-    headers: { Accept: 'text/event-stream', 'x-workspace-id': options.workspace },
+    headers: {
+      Accept: 'text/event-stream',
+      'x-workspace-id': options.workspace,
+      ...actorHeader(path),
+    },
     signal: options.signal,
   });
   if (!response.ok) {
@@ -62,6 +78,7 @@ export async function streamApi<T>(
       'Content-Type': 'application/json',
       Accept: 'text/event-stream',
       'x-workspace-id': options.workspace,
+      ...actorHeader(path),
     },
     body: JSON.stringify(options.body),
     signal: options.signal,
@@ -113,6 +130,7 @@ export async function api<T>(
     headers: {
       ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
       ...(options.workspace ? { 'x-workspace-id': options.workspace } : {}),
+      ...actorHeader(path),
     },
     ...(options.body !== undefined ? { body: requestBody } : {}),
     signal: options.signal,

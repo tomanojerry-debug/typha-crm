@@ -46,7 +46,7 @@ import { noteSourceCandidates } from './note-sources.js';
 import { prepareNoteDraft, saveAgentAnswerAsNoteDraft } from './note-agent.js';
 import { listDocumentAttributeFields, organizeDocumentAttributes } from './document-attributes.js';
 import * as mailSettings from './mail-settings.js';
-import type { Customer } from '../shared/domain.js';
+import type { Customer, WorkspaceMode } from '../shared/domain.js';
 import * as lists from './lists.js';
 import express, { type Request, type Response, type NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
@@ -63,6 +63,7 @@ import {
   tokenHash,
   verifyPassword,
   type Context,
+  type ScopedOptions,
 } from './security.js';
 import * as v from './validation.js';
 import * as service from './service.js';
@@ -149,6 +150,7 @@ export function createApp(db: Database, options: AppOptions) {
   app.use('/api/ask/query', express.json({ limit: '1mb' }));
   app.use('/api/prospect-intakes', express.json({ limit: '1mb' }));
   app.use('/api/prospects', express.json({ limit: '2mb' }));
+  app.patch('/api/tasks/:id', express.json({ limit: '3mb' }));
   app.use(express.json({ limit: '128kb' }));
   app.use(cookieParser());
   const cookieOptions = {
@@ -224,6 +226,12 @@ export function createApp(db: Database, options: AppOptions) {
     res.locals.actor = user;
     next();
   });
+  app.use('/api', (req, res, next) => {
+    const expectedActor = req.get('x-expected-actor-id');
+    if (expectedActor !== undefined && expectedActor !== res.locals.actor.id)
+      throw new ApiError(401, '当前登录账号已变更，请重新打开工作空间');
+    next();
+  });
   app.post('/api/auth/logout', async (req, res) => {
     if (options.localActorId) throw new ApiError(409, '本地工作台无需退出登录');
     await db.query('DELETE FROM sessions WHERE token_hash = $1', [
@@ -234,7 +242,8 @@ export function createApp(db: Database, options: AppOptions) {
   app.get('/api/session', async (_req, res) => {
     const workspaces = (
       await db.query(
-        `SELECT w.id, w.name, m.role FROM memberships m JOIN workspaces w ON w.id = m.workspace_id
+        `SELECT w.id, w.name, m.role, COALESCE(to_jsonb(m)->>'workspace_mode', 'crm') AS workspace_mode
+       FROM memberships m JOIN workspaces w ON w.id = m.workspace_id
        WHERE m.actor_id = $1 AND m.active ORDER BY w.name, w.id`,
         [res.locals.actor.id],
       )
@@ -246,10 +255,16 @@ export function createApp(db: Database, options: AppOptions) {
     });
   });
   const business =
-    (fn: (ctx: Context, req: Request) => Promise<unknown>, status = 200) =>
+    (fn: (ctx: Context, req: Request) => Promise<unknown>, status = 200, scope?: ScopedOptions) =>
     async (req: Request, res: Response) => {
       const workspaceId = v.uuid.parse(req.get('x-workspace-id'));
-      const result = await scoped(db, res.locals.actor.id, workspaceId, (ctx) => fn(ctx, req));
+      const result = await scoped(
+        db,
+        res.locals.actor.id,
+        workspaceId,
+        (ctx) => fn(ctx, req),
+        scope,
+      );
       res.status(status).json(result);
     };
   app.get(
@@ -388,6 +403,12 @@ export function createApp(db: Database, options: AppOptions) {
     business((ctx, req) => businessActivities.members(ctx, v.uuid.parse(req.query.customer_id))),
   );
   app.get(
+    '/api/activity-collaboration-members',
+    business((ctx, req) =>
+      businessActivities.collaborationMembers(ctx, v.uuid.parse(req.query.customer_id)),
+    ),
+  );
+  app.get(
     '/api/activities',
     business((ctx, req) => businessActivities.browse(ctx, req.query)),
   );
@@ -421,12 +442,39 @@ export function createApp(db: Database, options: AppOptions) {
   );
   app.get(
     '/api/tasks',
-    business((ctx, req) => businessActivities.tasks(ctx, req.query)),
+    business((ctx, req) => businessActivities.tasks(ctx, req.query), 200, { allowTasks: true }),
   );
   app.patch(
     '/api/tasks/:id',
+    business(
+      (ctx, req) => businessActivities.updateTask(ctx, v.uuid.parse(req.params.id), req.body),
+      200,
+      { allowTasks: true },
+    ),
+  );
+  app.post(
+    '/api/task-collaborations/:id/revoke',
     business((ctx, req) =>
-      businessActivities.updateTask(ctx, v.uuid.parse(req.params.id), req.body),
+      businessActivities.revokeTaskCollaboration(ctx, v.uuid.parse(req.params.id), req.body),
+    ),
+  );
+  app.get(
+    '/api/task-collaborations/:id/attachment',
+    business(
+      (ctx, req) =>
+        businessActivities.taskCollaborationAttachment(ctx, v.uuid.parse(req.params.id)),
+      200,
+      { allowTasks: true },
+    ),
+  );
+  app.get(
+    '/api/activities/:activityId/task-mail-draft/:taskId',
+    business((ctx, req) =>
+      businessActivities.activityTaskMailDraft(
+        ctx,
+        v.uuid.parse(req.params.activityId),
+        v.uuid.parse(req.params.taskId),
+      ),
     ),
   );
   app.get(
@@ -922,6 +970,25 @@ export function createApp(db: Database, options: AppOptions) {
   app.get(
     '/api/mail/accounts',
     business((ctx) => mail.accounts(ctx)),
+  );
+  app.get(
+    '/api/mail-sender-capability',
+    business((ctx) => outgoing.senderCapability(ctx)),
+  );
+  app.get(
+    '/api/mail-accounts/:id/senders',
+    business((ctx, req) => outgoing.senderGrants(ctx, v.uuid.parse(req.params.id))),
+  );
+  app.put(
+    '/api/mail-accounts/:id/senders/:actorId',
+    business((ctx, req) =>
+      outgoing.setSenderGrant(
+        ctx,
+        v.uuid.parse(req.params.id),
+        v.uuid.parse(req.params.actorId),
+        req.body,
+      ),
+    ),
   );
   app.get(
     '/api/people/:personId/compose-options',
@@ -1425,7 +1492,9 @@ export function createApp(db: Database, options: AppOptions) {
       async (ctx) =>
         (
           await ctx.tx.query(
-            'SELECT actor_id, display_name, email, role, active FROM workspace_people WHERE workspace_id = $1 ORDER BY display_name',
+            `SELECT p.actor_id, p.display_name, p.email, p.role, p.active,
+               COALESCE(to_jsonb(p)->>'workspace_mode', 'crm') AS workspace_mode
+             FROM workspace_people p WHERE p.workspace_id = $1 ORDER BY p.display_name, p.actor_id`,
             [ctx.workspaceId],
           )
         ).rows,
@@ -1460,16 +1529,24 @@ export function createApp(db: Database, options: AppOptions) {
         'INSERT INTO users(id, email, display_name, password_hash) VALUES ($1, $2, $3, $4)',
         [id, input.email, input.display_name, passwordHash],
       );
-      await tx.query(
-        "INSERT INTO memberships(workspace_id, actor_id, role) VALUES ($1, $2, 'member')",
-        [workspaceId, id],
-      );
+      if (input.workspace_mode === 'tasks') {
+        await tx.query(
+          "INSERT INTO memberships(workspace_id, actor_id, role, workspace_mode) VALUES ($1, $2, 'member', 'tasks')",
+          [workspaceId, id],
+        );
+      } else {
+        await tx.query(
+          "INSERT INTO memberships(workspace_id, actor_id, role) VALUES ($1, $2, 'member')",
+          [workspaceId, id],
+        );
+      }
       return {
         actor_id: id,
         display_name: input.display_name,
         email: input.email,
         role: 'member',
         active: true,
+        workspace_mode: input.workspace_mode,
       };
     });
     res.status(201).json(result);
@@ -1806,13 +1883,16 @@ export function createApp(db: Database, options: AppOptions) {
         .strictObject({ access: z.enum(['viewer', 'editor']).nullable() })
         .parse(req.body);
       const member = (
-        await ctx.tx.query<{ role: string; active: boolean }>(
-          'SELECT role, active FROM workspace_people WHERE workspace_id = $1 AND actor_id = $2',
+        await ctx.tx.query<{ role: string; active: boolean; workspace_mode: WorkspaceMode }>(
+          `SELECT p.role, p.active, COALESCE(to_jsonb(p)->>'workspace_mode', 'crm') AS workspace_mode
+           FROM workspace_people p WHERE p.workspace_id = $1 AND p.actor_id = $2`,
           [ctx.workspaceId, actorId],
         )
       ).rows[0];
       if (!member || member.role !== 'member' || (!member.active && access !== null))
         throw new ApiError(400, '请选择当前工作空间的有效普通成员');
+      if (access !== null && member.workspace_mode === 'tasks')
+        throw new ApiError(400, '仅处理协作待办的成员不能获得客户档案权限');
       if (access === null) {
         await ctx.tx.query(
           'DELETE FROM customer_access WHERE workspace_id = $1 AND customer_id = $2 AND actor_id = $3',

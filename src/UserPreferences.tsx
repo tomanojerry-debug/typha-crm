@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Brain, MessageSquare, Pencil, Settings2, Trash2 } from 'lucide-react';
+import { Brain, MessageSquare, Pencil, Settings2, ShieldCheck, Trash2 } from 'lucide-react';
+import type { SessionInfo } from '../shared/domain';
 import { userPreferenceOptions, type UserPreferenceSetting } from '../shared/user-preferences';
 import { api, HttpError, isDemoRuntime } from './api';
 import { Dialog } from './WorkspaceUI';
 import { ActivitySettings } from './ActivitySettings';
+import { TeamPermissionSettings } from './TeamPermissionSettings';
 
 const errorText = (error: unknown) => (error instanceof Error ? error.message : '操作失败，请重试');
 const updatedTime = (value: string) => {
@@ -28,16 +30,20 @@ export function UserPreferences({
   workspace,
   workspaceName,
   admin = false,
+  authMode,
+  onTeamChanged,
   onClose,
   onOpenChat,
 }: {
   workspace: string;
   workspaceName: string;
   admin?: boolean;
+  authMode?: SessionInfo['auth_mode'];
+  onTeamChanged?: () => void;
   onClose: () => void;
   onOpenChat: (id: string) => void;
 }) {
-  const [section, setSection] = useState<'memory' | 'activities'>('memory');
+  const [section, setSection] = useState<'memory' | 'activities' | 'team'>('memory');
   const [preferences, setPreferences] = useState<UserPreferenceSetting[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -189,9 +195,26 @@ export function UserPreferences({
             <Settings2 size={15} />
             活动与 Schema
           </button>
+          {admin && (
+            <button
+              className={section === 'team' ? 'active' : ''}
+              aria-current={section === 'team' ? 'page' : undefined}
+              onClick={() => requestAction(() => setSection('team'))}
+            >
+              <ShieldCheck size={15} aria-hidden="true" />
+              成员与权限
+            </button>
+          )}
         </nav>
         {section === 'activities' ? (
           <ActivitySettings workspace={workspace} admin={admin} />
+        ) : section === 'team' && admin ? (
+          <TeamPermissionSettings
+            key={workspace}
+            workspace={workspace}
+            authMode={authMode}
+            onChanged={onTeamChanged}
+          />
         ) : (
           <section className="personal-settings-content" aria-labelledby="memory-settings-title">
             <div className="personal-settings-heading">

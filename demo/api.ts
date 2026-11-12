@@ -1,15 +1,27 @@
 import fixtureData from './fixture.json';
 import type { DemoFixture } from './types';
-import { createDemoTransport, DEMO_UNAVAILABLE, type DemoRequestOptions } from './transport';
+import { DEMO_UNAVAILABLE, type DemoRequestOptions } from './transport';
+import { createDemoRuntime } from './runtime';
 import { HttpError } from '../src/api';
 
 export { HttpError, transientReadFailure } from '../src/api';
 export const isDemoRuntime = () => true;
-export const demoTransport = createDemoTransport(fixtureData as DemoFixture);
-export const resetDemoData = () => demoTransport.reset();
+export function bindApiActor(_actorId: string) {
+  // The browser-only runtime binds each request to its selected role.
+}
+export const demoRuntime = createDemoRuntime(fixtureData as DemoFixture);
+let logoutListener: (() => void) | undefined;
+export function onDemoLogout(listener: () => void) {
+  logoutListener = listener;
+  return () => {
+    if (logoutListener === listener) logoutListener = undefined;
+  };
+}
 
-export function api<T>(path: string, options: DemoRequestOptions = {}): Promise<T> {
-  return demoTransport.request<T>(path, options);
+export async function api<T>(path: string, options: DemoRequestOptions = {}): Promise<T> {
+  const result = await demoRuntime.request<T>(path, options);
+  if (path === '/auth/logout' && options.method === 'POST') logoutListener?.();
+  return result;
 }
 
 /** Live generation and subscriptions are intentionally absent from this static experience. */

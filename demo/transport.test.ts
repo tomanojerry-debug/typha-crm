@@ -3,7 +3,7 @@ import fixtureData from './fixture.json';
 import type { DemoFixture } from './types';
 import { snapshotKey } from './types';
 import { createDemoTransport, DEMO_UNAVAILABLE } from './transport';
-import { api, isDemoRuntime, streamApi, watchApi } from './api';
+import { api, demoRuntime, isDemoRuntime, streamApi, watchApi } from './api';
 import type { ActivityAnalysisResult } from '../shared/activity-analysis';
 import type { ActivityTask } from '../shared/business-activities';
 import type { Customer } from '../shared/domain';
@@ -519,7 +519,16 @@ describe('static product transport', () => {
         onEvent: vi.fn(),
       }),
     ).rejects.toMatchObject({ status: 403 });
-    expect(await api('/session')).toEqual(fixture.snapshots['/session']);
+    await expect(api('/session')).rejects.toMatchObject({ status: 401 });
+    demoRuntime.choose('boss');
+    try {
+      expect(await api('/session')).toMatchObject({
+        actor: { id: fixture.actorId },
+        workspaces: [{ id: fixture.workspaceId, role: 'admin' }],
+      });
+    } finally {
+      demoRuntime.reset();
+    }
     expect(network).not.toHaveBeenCalled();
   });
 

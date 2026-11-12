@@ -50,6 +50,7 @@ export interface OutgoingContent {
 export interface OutgoingMail extends OutgoingContent {
   variable_snapshot?: MailVariableSnapshot | null;
   deliveries?: OutgoingDelivery[];
+  handoff_task_id?: string;
   id: string;
   workspace_id: string;
   customer_id: string;
@@ -87,6 +88,7 @@ export interface ComposeOptions {
   accounts: { id: string; email: string }[];
   projects: { id: string; name: string }[];
   sender_notice: string | null;
+  can_test_sender?: boolean;
 }
 export interface ReplyOptions {
   source_id: string;

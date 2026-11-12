@@ -150,3 +150,117 @@
     height: calc(100dvh - var(--demo-toolbar-height));
   }
 }
+
+.demo-login {
+  height: 100%;
+  overflow: auto;
+  display: grid;
+  align-items: safe center;
+  justify-items: center;
+  padding: clamp(24px, 6vw, 76px) 18px;
+  background: radial-gradient(ellipse at 50% 16%, #f2f5ff, #f8fafd 65%, #fafbfd);
+  color: #182234;
+}
+.demo-login-inner {
+  width: min(100%, 690px);
+  padding: clamp(24px, 6vw, 56px);
+  background: #fff;
+  border: 1px solid #e0e5ee;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px #344c7d13;
+}
+.demo-login-brand {
+  margin-bottom: 28px;
+  font-size: 20px;
+  letter-spacing: -0.04em;
+  font-weight: 700;
+}
+.demo-login-brand span {
+  margin-left: 6px;
+  color: #50678e;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+.demo-login h1 {
+  margin: 0;
+  font-size: clamp(24px, 4vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+.demo-login-intro {
+  margin: 12px 0 24px;
+  color: #525f75;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.demo-login-accounts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.demo-login-account {
+  min-width: 0;
+  min-height: 95px;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 17px;
+  align-items: center;
+  gap: 11px;
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #dde4ef;
+  border-radius: 10px;
+  background: #f9fbff;
+  color: #182234;
+  cursor: pointer;
+}
+.demo-login-account:hover {
+  border-color: #9dafd0;
+  background: #f2f6ff;
+}
+.demo-login-account:focus-visible {
+  outline: 2px solid #4560a5;
+  outline-offset: 3px;
+}
+.demo-login-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #e7eeff;
+  color: #3d5697;
+}
+.demo-login-account-text {
+  display: grid;
+  gap: 4px;
+  line-height: 1.45;
+}
+.demo-login-account-text strong {
+  font-size: 14px;
+}
+.demo-login-account-text span {
+  color: #52617b;
+  font-size: 11px;
+}
+.demo-login-arrow {
+  color: #526a9f;
+}
+.demo-login-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 20px 0 0;
+  color: #52617b;
+  font-size: 12px;
+}
+@media (max-width: 560px) {
+  .demo-login-accounts {
+    grid-template-columns: 1fr;
+  }
+  .demo-login-account {
+    min-height: 70px;
+  }
+  .demo-experience:has(.ba-collaboration-workspace) .demo-toolbar .demo-install {
+    display: none;
+  }
+}

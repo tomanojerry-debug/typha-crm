@@ -81,17 +81,24 @@ export interface CustomerRecord {
   created_by: string;
   created_at: string;
 }
+export type WorkspaceMode = 'crm' | 'tasks';
 export interface Member {
   actor_id: string;
   display_name: string;
   email: string;
   role: 'admin' | 'member';
   active: boolean;
+  workspace_mode?: WorkspaceMode;
 }
 export interface SessionInfo {
   auth_mode: 'local' | 'password';
   actor: { id: string; email: string; display_name: string };
-  workspaces: { id: string; name: string; role: 'admin' | 'member' }[];
+  workspaces: {
+    id: string;
+    name: string;
+    role: 'admin' | 'member';
+    workspace_mode?: WorkspaceMode;
+  }[];
 }
 export interface AuditEvent {
   id: string;

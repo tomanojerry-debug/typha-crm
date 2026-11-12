@@ -1,0 +1,155 @@
+.team-settings .team-settings-tabs {
+  margin: 18px 0;
+}
+
+.team-settings-tabs > button[aria-current='page'] {
+  color: #374962;
+  border-bottom-color: #596d91;
+  font-weight: 600;
+}
+
+.team-settings h4 {
+  margin: 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.team-settings-heading,
+.team-settings-actions,
+.team-settings-search {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.team-settings-heading {
+  justify-content: space-between;
+}
+
+.team-settings-search {
+  margin: 14px 0;
+}
+
+.team-settings-search input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.team-settings-actions {
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.team-settings-actions > span,
+.team-settings-state,
+.team-settings-person > span {
+  color: #6f7886;
+  font-size: 12px;
+}
+
+.team-settings-form {
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid #e9ecf1;
+  border-radius: 8px;
+}
+
+.team-settings-form fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.team-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+
+.team-settings-grid .field {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.team-settings-grid .field > span,
+.team-settings-mailbox > span {
+  color: #788393;
+  font-size: 12px;
+}
+
+.team-settings-mailbox {
+  margin-top: 14px;
+  max-width: 370px;
+}
+
+.team-settings-grid .field :is(input, select) {
+  min-width: 0;
+  width: 100%;
+}
+
+.team-settings-form .personal-settings-description {
+  margin-top: 10px;
+}
+
+.team-settings-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  border-top: 1px solid #e9ecf1;
+}
+
+.team-settings-list > li {
+  padding: 10px 0;
+  border-bottom: 1px solid #e9ecf1;
+}
+
+.team-settings-row,
+.team-settings-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 10px;
+}
+
+.team-settings-person {
+  display: grid;
+  flex: 1 1 150px;
+  min-width: 0;
+  gap: 3px;
+  overflow-wrap: anywhere;
+}
+
+.team-settings-person > strong {
+  font-size: 13px;
+}
+
+.team-settings-person > span:empty {
+  display: none;
+}
+
+.team-settings-confirm {
+  margin-top: 8px;
+  padding: 9px;
+  border-radius: 6px;
+  background: #f5f7fa;
+}
+
+.team-settings-confirm p {
+  flex: 1 1 180px;
+  margin: 0;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .user-preferences-dialog .personal-settings-nav {
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+
+  .team-settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

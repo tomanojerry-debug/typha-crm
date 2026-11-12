@@ -11,22 +11,32 @@ import {
   RefreshCw,
   Sparkles,
 } from 'lucide-react';
-import { api } from './api';
+import { api, HttpError } from './api';
 import { Dialog } from './WorkspaceUI';
 import { KnowledgeChanges } from './KnowledgeChanges';
+import { MailComposer } from './MailComposer';
 import { activityKindLabels } from './ActivitySettings';
-import type { Person, Project, SessionInfo } from '../shared/domain';
-import { activityBaseField } from '../shared/business-activities';
+import type { Customer, Person, Project, SessionInfo } from '../shared/domain';
+import type { OutgoingMail } from '../shared/outgoing';
+import {
+  activityBaseField,
+  collaborationAttachmentLimit,
+  collaborationAttachmentTypes,
+} from '../shared/business-activities';
 import type {
+  ActivityCollaborationMember,
   ActivityDetail,
   ActivityField,
   ActivityGenerationResult,
   ActivityMember,
   ActivitySource,
   ActivityTask,
+  ActivityTaskMailDraft,
   ActivityValue,
+  AssignedActivityTask,
   BusinessActivity,
   BusinessActivityType,
+  CollaborationTaskAttachment as HandoffFile,
 } from '../shared/business-activities';
 import './business-activities.css';
 
@@ -733,6 +743,7 @@ export function ActivityDetailDialog({
   const [data, setData] = useState<ActivityDetail | null>(null);
   const [members, setMembers] = useState<ActivityMember[]>([]);
   const [actor, setActor] = useState('');
+  const [maySend, setMaySend] = useState(false);
   const [companyName, setCompanyName] = useState('');
   const [projectName, setProjectName] = useState('');
   const [personNames, setPersonNames] = useState<string[]>([]);
@@ -743,6 +754,13 @@ export function ActivityDetailDialog({
   const [draft, setDraft] = useState<Record<string, ActivityValue>>({});
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  const [mailDraft, setMailDraft] = useState<{
+    taskId: string;
+    customer: Customer;
+    recipient: Person | null;
+    seed: ActivityTaskMailDraft;
+    existing: OutgoingMail | null;
+  } | null>(null);
   const refresh = useCallback(() => setRevision((n) => n + 1), []);
   useEffect(() => {
     const c = new AbortController();
@@ -761,7 +779,16 @@ export function ActivityDetailDialog({
         if (!c.signal.aborted) setError(errorText(e));
       });
     api<SessionInfo>('/session', { signal: c.signal })
-      .then((s) => setActor(s.actor.id))
+      .then((s) => {
+        if (c.signal.aborted) return;
+        setActor(s.actor.id);
+      })
+      .catch(() => {});
+    setMaySend(false);
+    api<{ can_send: boolean }>('/mail-sender-capability', { workspace, signal: c.signal })
+      .then((capability) => {
+        if (!c.signal.aborted) setMaySend(capability.can_send);
+      })
       .catch(() => {});
     return () => c.abort();
   }, [workspace, activityId, personId, projectId, revision]);
@@ -844,249 +871,375 @@ export function ActivityDetailDialog({
       setBusy(false);
     }
   }
+  async function openTaskMail(task: ActivityTask) {
+    if (!data || !maySend || busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      const seed = await api<ActivityTaskMailDraft>(
+        `/activities/${activityId}/task-mail-draft/${task.id}`,
+        { workspace },
+      );
+      if (seed.customer_id !== data.customer_id || seed.project_id !== data.project_id)
+        throw new Error('交接附件与当前活动范围不一致，请刷新后重试');
+      const [customer, existing] = await Promise.all([
+        api<Customer>(`/customers/${seed.customer_id}`, { workspace }),
+        api<OutgoingMail>(`/outgoing/${seed.draft_id}`, { workspace }).catch((e) => {
+          if (e instanceof HttpError && e.status === 404) return null;
+          throw e;
+        }),
+      ]);
+      if (
+        existing &&
+        (existing.handoff_task_id !== task.id ||
+          existing.customer_id !== seed.customer_id ||
+          existing.project_id !== seed.project_id)
+      )
+        throw new Error('已保存邮件与当前交接项目不一致，请从客户档案打开该邮件核对');
+      const person = existing
+        ? existing.person_id
+        : (personId ??
+          (data.linked_person_ids.length === 1 ? data.linked_person_ids[0] : undefined));
+      const recipient = person ? await api<Person>(`/people/${person}`, { workspace }) : null;
+      if (recipient && (recipient.customer_id !== seed.customer_id || recipient.archived_at))
+        throw new Error('关联联系人已归档或不属于当前客户，请核对后重试');
+      setMailDraft({ taskId: task.id, customer, recipient, seed, existing });
+    } catch (e) {
+      setError(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function revokeTask(task: ActivityTask) {
+    if (!data || busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      await api(`/task-collaborations/${task.id}/revoke`, {
+        workspace,
+        method: 'POST',
+        body: { version: task.version },
+      });
+      setNotice('协作已撤回。');
+      activitiesChanged(workspace, data.customer_id);
+      refresh();
+      onChanged?.();
+    } catch (e) {
+      setError(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
-    <Dialog
-      title={data?.title || '活动详情'}
-      className="ba-dialog ba-detail-dialog"
-      onClose={() => {
-        if (!busy) onClose();
-      }}
-    >
-      <div className="ba-dialog-body">
-        {error && (
-          <div className="ba-alert" role="alert">
-            {error}
-            <button disabled={busy} onClick={refresh}>
-              重新读取
-            </button>
-          </div>
-        )}
-        {notice && (
-          <p className="ba-notice" role="status">
-            {notice}
-          </p>
-        )}
-        {!data && !error && <p role="status">正在读取活动、字段与原文…</p>}
-        {data && (
-          <>
-            <div className="ba-detail-meta">
-              <span className="ba-tag">{data.type_name}</span>
-              <time>{activityTime(data.occurred_at)}</time>
-              <small>活动 ID：{data.id}</small>
+    <>
+      <Dialog
+        title={data?.title || '活动详情'}
+        className="ba-dialog ba-detail-dialog"
+        onClose={() => {
+          if (!busy) onClose();
+        }}
+      >
+        <div className="ba-dialog-body">
+          {error && (
+            <div className="ba-alert" role="alert">
+              {error}
+              <button disabled={busy} onClick={refresh}>
+                重新读取
+              </button>
             </div>
-            <p className="ba-related-records">
-              关联记录：{companyName || '当前公司'}
-              {projectName ? ` / ${projectName}` : ''}
-              {personNames.length ? ` / ${personNames.join('、')}` : ''}
+          )}
+          {notice && (
+            <p className="ba-notice" role="status">
+              {notice}
             </p>
-            <p className="ba-muted ba-small">
-              公司与已关联联系人共用这一条活动；知识索引不会增加独立证据数量。
-            </p>
-            <ActivityKnowledgeStatus
-              workspace={workspace}
-              customerId={data.customer_id}
-              personId={personId}
-              projectId={projectId || data.project_id || undefined}
-              revision={revision}
-            />
-            <div className="ba-toolbar">
-              <h3>属性与依据</h3>
-              {editable && data.can_edit && (
-                <div className="ba-button-row">
-                  {editing ? (
-                    <>
-                      <button
-                        disabled={busy}
-                        onClick={() => {
-                          setEditing(false);
-                          setDraft({ ...data.values });
-                        }}
-                      >
-                        取消编辑
-                      </button>
-                      <button className="primary" disabled={busy} onClick={() => void saveFields()}>
-                        {busy ? '保存中…' : '保存修改'}
-                      </button>
-                    </>
-                  ) : (
-                    <button onClick={() => setEditing(true)}>
-                      <Pencil size={13} />
-                      编辑字段
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-            <div className="ba-detail-fields">
-              {data.fields.map((f) => {
-                const provenance = data.field_provenance[f.id];
-                const writable =
-                  !f.system &&
-                  !f.read_only &&
-                  !['record_reference', 'actor_reference'].includes(f.kind);
-                return (
-                  <div className="ba-detail-field" key={f.id}>
-                    <div>
-                      <strong>{f.name}</strong>
-                      {f.inherited && (
-                        <span className="ba-inline-source">
-                          来自 {f.source_schema_name || 'Schema'}
-                        </span>
-                      )}
-                      <small>
-                        {provenance?.origin === 'manual'
-                          ? '人工补充'
-                          : provenance?.origin === 'ai'
-                            ? 'AI 整理'
-                            : '系统／关联信息'}
-                      </small>
-                    </div>
-                    <div>
-                      {editing && writable ? (
-                        <ActivityValueInput
-                          field={f}
-                          value={draft[f.id] ?? null}
-                          onChange={(value) => setDraft((old) => ({ ...old, [f.id]: value }))}
-                        />
-                      ) : (
-                        <p
-                          className={
-                            data.values[f.id] == null || data.values[f.id] === '' ? 'ba-muted' : ''
-                          }
-                        >
-                          {displayField(f, data.values[f.id])}
-                        </p>
-                      )}
-                      {provenance?.explanation && (
-                        <p className="ba-muted ba-small">{provenance.explanation}</p>
-                      )}
-                      {provenance?.origin === 'manual' &&
-                        Object.hasOwn(data.ai_values, f.id) &&
-                        JSON.stringify(data.ai_values[f.id]) !==
-                          JSON.stringify(data.values[f.id]) && (
-                          <p className="ba-muted ba-small">
-                            原 AI 整理：{activityValue(data.ai_values[f.id])}
-                          </p>
-                        )}
-                      {!!provenance?.evidence.length && (
-                        <details className="ba-evidence">
-                          <summary>原文依据 · {provenance.evidence.length} 处</summary>
-                          {provenance.evidence.map((e, i) => {
-                            const source = data.sources.find((s) => s.id === e.source_id);
-                            return source ? (
-                              <blockquote key={`${e.source_id}:${i}`}>
-                                <small>
-                                  {source.speaker || source.title} ·{' '}
-                                  {activityTime(source.occurred_at)}
-                                </small>
-                                <p>{e.quote}</p>
-                              </blockquote>
-                            ) : (
-                              <p className="ba-muted" key={`${e.source_id}:${i}`}>
-                                来源已不可用或权限发生变化。
-                              </p>
-                            );
-                          })}
-                        </details>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <details className="ba-originals">
-              <summary>
-                <FileText size={14} />
-                查看本活动引用的原文（{data.sources.length}）
-              </summary>
-              {data.sources.map((source) => (
-                <article key={source.id}>
-                  <strong>{source.speaker || source.title}</strong>
-                  <small>
-                    {source.channel === 'email'
-                      ? '邮件'
-                      : source.channel === 'wechat'
-                        ? '微信'
-                        : '人工补充／处理结果'}{' '}
-                    · {activityTime(source.occurred_at)}
-                  </small>
-                  <p>{source.body}</p>
-                </article>
-              ))}
-            </details>
-            <section className="ba-comments">
-              <h3>备注与跟进事项</h3>
-              {data.comments.map((comment) => (
-                <article key={comment.id}>
-                  <div>
-                    <strong>
-                      {members.find((m) => m.actor_id === comment.created_by)?.display_name ||
-                        '工作空间成员'}
-                    </strong>
-                    <time>{activityTime(comment.created_at)}</time>
-                  </div>
-                  <p>{comment.body}</p>
-                </article>
-              ))}
-              {memberError && (
-                <p className="ba-alert" role="alert">
-                  成员暂不可读取：{memberError}
-                </p>
-              )}
-              {editable && data.can_edit && (
-                <ActivityCommentForm
-                  workspace={workspace}
-                  activity={data}
-                  members={members}
-                  onSaved={() => {
-                    refresh();
-                    onChanged?.();
-                  }}
-                />
-              )}
-            </section>
-            {!!data.tasks.length && (
-              <section className="ba-tasks-in-detail">
-                <h3>关联待办</h3>
-                {data.tasks.map((task) => (
-                  <article key={task.id}>
-                    <strong>{task.title}</strong>
-                    <p className="ba-muted ba-small">
-                      @
-                      {members.find((m) => m.actor_id === task.assignee_id)?.display_name ||
-                        '已分派成员'}{' '}
-                      · {taskLabels[task.status]}
-                      {task.due_date ? ` · ${task.due_date}` : ''}
-                    </p>
-                    {task.result && <p>{task.result}</p>}
-                    {task.assignee_id === actor && (
-                      <ActivityTaskActions
-                        workspace={workspace}
-                        task={task}
-                        onChanged={() => {
-                          refresh();
-                          onChanged?.();
-                        }}
-                      />
-                    )}
-                  </article>
-                ))}
-              </section>
-            )}
-            <div className="ba-knowledge">
-              <h3>当前范围的知识状态与变化</h3>
-              <KnowledgeChanges
-                key={revision}
+          )}
+          {!data && !error && <p role="status">正在读取活动、字段与原文…</p>}
+          {data && (
+            <>
+              <div className="ba-detail-meta">
+                <span className="ba-tag">{data.type_name}</span>
+                <time>{activityTime(data.occurred_at)}</time>
+                <small>活动 ID：{data.id}</small>
+              </div>
+              <p className="ba-related-records">
+                关联记录：{companyName || '当前公司'}
+                {projectName ? ` / ${projectName}` : ''}
+                {personNames.length ? ` / ${personNames.join('、')}` : ''}
+              </p>
+              <p className="ba-muted ba-small">
+                公司与已关联联系人共用这一条活动；知识索引不会增加独立证据数量。
+              </p>
+              <ActivityKnowledgeStatus
                 workspace={workspace}
                 customerId={data.customer_id}
-                projectId={projectId || data.project_id || undefined}
                 personId={personId}
+                projectId={projectId || data.project_id || undefined}
+                revision={revision}
               />
-            </div>
-          </>
-        )}
-      </div>
-    </Dialog>
+              <div className="ba-toolbar">
+                <h3>属性与依据</h3>
+                {editable && data.can_edit && (
+                  <div className="ba-button-row">
+                    {editing ? (
+                      <>
+                        <button
+                          disabled={busy}
+                          onClick={() => {
+                            setEditing(false);
+                            setDraft({ ...data.values });
+                          }}
+                        >
+                          取消编辑
+                        </button>
+                        <button
+                          className="primary"
+                          disabled={busy}
+                          onClick={() => void saveFields()}
+                        >
+                          {busy ? '保存中…' : '保存修改'}
+                        </button>
+                      </>
+                    ) : (
+                      <button onClick={() => setEditing(true)}>
+                        <Pencil size={13} />
+                        编辑字段
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="ba-detail-fields">
+                {data.fields.map((f) => {
+                  const provenance = data.field_provenance[f.id];
+                  const writable =
+                    !f.system &&
+                    !f.read_only &&
+                    !['record_reference', 'actor_reference'].includes(f.kind);
+                  return (
+                    <div className="ba-detail-field" key={f.id}>
+                      <div>
+                        <strong>{f.name}</strong>
+                        {f.inherited && (
+                          <span className="ba-inline-source">
+                            来自 {f.source_schema_name || 'Schema'}
+                          </span>
+                        )}
+                        <small>
+                          {provenance?.origin === 'manual'
+                            ? '人工补充'
+                            : provenance?.origin === 'ai'
+                              ? 'AI 整理'
+                              : '系统／关联信息'}
+                        </small>
+                      </div>
+                      <div>
+                        {editing && writable ? (
+                          <ActivityValueInput
+                            field={f}
+                            value={draft[f.id] ?? null}
+                            onChange={(value) => setDraft((old) => ({ ...old, [f.id]: value }))}
+                          />
+                        ) : (
+                          <p
+                            className={
+                              data.values[f.id] == null || data.values[f.id] === ''
+                                ? 'ba-muted'
+                                : ''
+                            }
+                          >
+                            {displayField(f, data.values[f.id])}
+                          </p>
+                        )}
+                        {provenance?.explanation && (
+                          <p className="ba-muted ba-small">{provenance.explanation}</p>
+                        )}
+                        {provenance?.origin === 'manual' &&
+                          Object.hasOwn(data.ai_values, f.id) &&
+                          JSON.stringify(data.ai_values[f.id]) !==
+                            JSON.stringify(data.values[f.id]) && (
+                            <p className="ba-muted ba-small">
+                              原 AI 整理：{activityValue(data.ai_values[f.id])}
+                            </p>
+                          )}
+                        {!!provenance?.evidence.length && (
+                          <details className="ba-evidence">
+                            <summary>原文依据 · {provenance.evidence.length} 处</summary>
+                            {provenance.evidence.map((e, i) => {
+                              const source = data.sources.find((s) => s.id === e.source_id);
+                              return source ? (
+                                <blockquote key={`${e.source_id}:${i}`}>
+                                  <small>
+                                    {source.speaker || source.title} ·{' '}
+                                    {activityTime(source.occurred_at)}
+                                  </small>
+                                  <p>{e.quote}</p>
+                                </blockquote>
+                              ) : (
+                                <p className="ba-muted" key={`${e.source_id}:${i}`}>
+                                  来源已不可用或权限发生变化。
+                                </p>
+                              );
+                            })}
+                          </details>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <details className="ba-originals">
+                <summary>
+                  <FileText size={14} />
+                  查看本活动引用的原文（{data.sources.length}）
+                </summary>
+                {data.sources.map((source) => (
+                  <article key={source.id}>
+                    <strong>{source.speaker || source.title}</strong>
+                    <small>
+                      {source.channel === 'email'
+                        ? '邮件'
+                        : source.channel === 'wechat'
+                          ? '微信'
+                          : '人工补充／处理结果'}{' '}
+                      · {activityTime(source.occurred_at)}
+                    </small>
+                    <p>{source.body}</p>
+                  </article>
+                ))}
+              </details>
+              <section className="ba-comments">
+                <h3>备注与跟进事项</h3>
+                {data.comments.map((comment) => (
+                  <article key={comment.id}>
+                    <div>
+                      <strong>
+                        {members.find((m) => m.actor_id === comment.created_by)?.display_name ||
+                          '工作空间成员'}
+                      </strong>
+                      <time>{activityTime(comment.created_at)}</time>
+                    </div>
+                    <p>{comment.body}</p>
+                  </article>
+                ))}
+                {memberError && (
+                  <p className="ba-alert" role="alert">
+                    成员暂不可读取：{memberError}
+                  </p>
+                )}
+                {editable && data.can_edit && (
+                  <ActivityCommentForm
+                    workspace={workspace}
+                    activity={data}
+                    members={members}
+                    onSaved={() => {
+                      refresh();
+                      onChanged?.();
+                    }}
+                  />
+                )}
+              </section>
+              {!!data.tasks.length && (
+                <section className="ba-tasks-in-detail">
+                  <h3>关联待办</h3>
+                  {data.tasks.map((task) => (
+                    <article key={task.id}>
+                      <strong>{task.title}</strong>
+                      <p className="ba-muted ba-small">
+                        @
+                        {task.assignee_display_name ||
+                          members.find((m) => m.actor_id === task.assignee_id)?.display_name ||
+                          '已分派成员'}{' '}
+                        · {taskLabels[task.status]}
+                        {task.due_date ? ` · ${task.due_date}` : ''}
+                      </p>
+                      {task.result && <p>{task.result}</p>}
+                      {task.task_only && (
+                        <div className="ba-task-result">
+                          <strong>{task.revoked_at ? '协作已撤回' : '交接要求'}</strong>
+                          <p>{task.collaboration_brief}</p>
+                          {task.attachment && <p>交付文件 · {task.attachment.filename}</p>}
+                        </div>
+                      )}
+                      {task.task_only && !task.revoked_at && editable && data.can_edit && (
+                        <div className="ba-button-row">
+                          <button disabled={busy} onClick={() => void revokeTask(task)}>
+                            撤回协作
+                          </button>
+                          {task.attachment && task.status === 'completed' && maySend && (
+                            <button
+                              className="primary"
+                              disabled={busy}
+                              onClick={() => void openTaskMail(task)}
+                            >
+                              <Mail size={14} />
+                              带附件写邮件
+                            </button>
+                          )}
+                          {task.attachment && task.status === 'completed' && !maySend && (
+                            <span className="ba-muted ba-small">
+                              由有发件权限的业务员核对并发送。
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {task.assignee_id === actor && !task.revoked_at && (
+                        <ActivityTaskActions
+                          workspace={workspace}
+                          task={task}
+                          onChanged={() => {
+                            refresh();
+                            onChanged?.();
+                          }}
+                        />
+                      )}
+                    </article>
+                  ))}
+                </section>
+              )}
+              <div className="ba-knowledge">
+                <h3>当前范围的知识状态与变化</h3>
+                <KnowledgeChanges
+                  key={revision}
+                  workspace={workspace}
+                  customerId={data.customer_id}
+                  projectId={projectId || data.project_id || undefined}
+                  personId={personId}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </Dialog>
+      {mailDraft && (
+        <MailComposer
+          key={mailDraft.taskId}
+          workspace={workspace}
+          kind={mailDraft.recipient ? 'people' : 'customers'}
+          person={
+            mailDraft.recipient ?? {
+              id: mailDraft.customer.id,
+              customer_id: mailDraft.customer.id,
+              customer_name: mailDraft.customer.name,
+              name: mailDraft.customer.name,
+              email: '',
+            }
+          }
+          draftId={mailDraft.existing ? mailDraft.seed.draft_id : undefined}
+          handoff={{
+            taskId: mailDraft.taskId,
+            draftId: mailDraft.seed.draft_id,
+            projectId: mailDraft.seed.project_id,
+            cc: mailDraft.seed.cc?.email ?? null,
+            attachment: {
+              name: mailDraft.seed.attachment.filename,
+              content: mailDraft.seed.attachment.content_base64,
+            },
+          }}
+          onClose={() => setMailDraft(null)}
+          onChanged={() => onChanged?.()}
+        />
+      )}
+    </>
   );
 }
 
@@ -1203,17 +1356,58 @@ function ActivityCommentForm({
   const [assignee, setAssignee] = useState('');
   const [title, setTitle] = useState('');
   const [due, setDue] = useState('');
+  const [taskOnly, setTaskOnly] = useState(false);
+  const [brief, setBrief] = useState('');
+  const [fileRequired, setFileRequired] = useState(false);
+  const [ccActor, setCcActor] = useState('');
+  const [collaborators, setCollaborators] = useState<ActivityCollaborationMember[]>([]);
+  const [memberStatus, setMemberStatus] = useState<'idle' | 'loading' | 'loaded'>('idle');
+  const [memberError, setMemberError] = useState('');
+  const [memberRevision, setMemberRevision] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const request = useRef<{ key: string; id: string } | null>(null);
+  useEffect(() => {
+    if (!taskOnly) return;
+    const c = new AbortController();
+    setMemberStatus('loading');
+    setMemberError('');
+    api<ActivityCollaborationMember[]>(
+      `/activity-collaboration-members?customer_id=${activity.customer_id}`,
+      { workspace, signal: c.signal },
+    )
+      .then((items) => {
+        if (c.signal.aborted) return;
+        setCollaborators(items);
+        setMemberStatus('loaded');
+      })
+      .catch((e) => {
+        if (c.signal.aborted) return;
+        setCollaborators([]);
+        setMemberStatus('idle');
+        setMemberError(errorText(e));
+      });
+    return () => c.abort();
+  }, [taskOnly, workspace, activity.customer_id, memberRevision]);
+  const ready = taskOnly
+    ? memberStatus === 'loaded' && !!assignee && !!title.trim() && !!brief.trim()
+    : !!body.trim() && (!assignee || !!title.trim());
   async function save() {
-    if (!body.trim() || busy || (assignee && !title.trim())) return;
+    if (!ready || busy) return;
     setBusy(true);
     setError('');
     const input = {
-      body: body.trim(),
+      body: body.trim() || `已发起协作待办：${title.trim()}`,
       ...(assignee
         ? { assignee_id: assignee, task_title: title.trim(), ...(due ? { due_date: due } : {}) }
+        : {}),
+      ...(taskOnly
+        ? {
+            task_only: true,
+            collaboration_brief: brief.trim(),
+            attachment_required: fileRequired,
+            ...(ccActor ? { mail_cc_actor_id: ccActor } : {}),
+          }
         : {}),
     };
     const key = JSON.stringify(input);
@@ -1228,6 +1422,10 @@ function ActivityCommentForm({
       setAssignee('');
       setTitle('');
       setDue('');
+      setTaskOnly(false);
+      setBrief('');
+      setFileRequired(false);
+      setCcActor('');
       request.current = null;
       activitiesChanged(workspace, activity.customer_id);
       onSaved();
@@ -1240,10 +1438,27 @@ function ActivityCommentForm({
   return (
     <div className="ba-comment-form">
       <label className="field">
-        补充说明
+        交接范围
+        <select
+          value={taskOnly ? 'task' : 'customer'}
+          onChange={(event) => {
+            setTaskOnly(event.target.value === 'task');
+            setAssignee('');
+            setCcActor('');
+            setMemberStatus('idle');
+          }}
+          disabled={busy}
+        >
+          <option value="customer">客户活动 · 面向已获客户授权的同事</option>
+          <option value="task">仅共享交接要求 · 可指派任务协作成员</option>
+        </select>
+      </label>
+      <label className="field">
+        {taskOnly ? '内部备注，可空' : '补充说明'}
         <textarea
           rows={3}
           value={body}
+          maxLength={4000}
           onChange={(e) => setBody(e.target.value)}
           disabled={busy}
           placeholder="补充情况；只有你明确选择同事并填写跟进事项时，才生成待办。"
@@ -1252,25 +1467,31 @@ function ActivityCommentForm({
       <label className="field">
         <span>
           <AtSign size={13} />
-          交给同事跟进，可选
+          {taskOnly ? '选择协作人' : '交给同事跟进，可选'}
         </span>
         <select value={assignee} onChange={(e) => setAssignee(e.target.value)} disabled={busy}>
-          <option value="">仅保存备注</option>
-          {members
-            .filter((m) => m.can_assign)
-            .map((m) => (
-              <option key={m.actor_id} value={m.actor_id}>
-                @{m.display_name}
-              </option>
-            ))}
+          <option value="">{taskOnly ? '请选择协作人' : '仅保存备注'}</option>
+          {(taskOnly ? collaborators : members.filter((m) => m.can_assign)).map((m) => (
+            <option key={m.actor_id} value={m.actor_id}>
+              @{m.display_name}
+            </option>
+          ))}
         </select>
       </label>
-      {assignee && (
+      {taskOnly && memberStatus === 'loading' && <p role="status">正在读取协作成员…</p>}
+      {taskOnly && memberError && (
+        <p className="ba-alert" role="alert">
+          {memberError}{' '}
+          <button onClick={() => setMemberRevision((n) => n + 1)}>重新读取成员</button>
+        </p>
+      )}
+      {(assignee || taskOnly) && (
         <div className="ba-form-grid">
           <label className="field">
             具体跟进事项
             <input
               value={title}
+              maxLength={500}
               onChange={(e) => setTitle(e.target.value)}
               disabled={busy}
               required
@@ -1288,60 +1509,192 @@ function ActivityCommentForm({
           </label>
         </div>
       )}
-      <p className="ba-muted ba-small">
-        原文中的 @ 不会触发派工；提交后，所选同事的“待办”会关联这条活动。
-      </p>
+      {taskOnly ? (
+        <>
+          <label className="field">
+            发给协作人的要求
+            <textarea
+              rows={3}
+              value={brief}
+              maxLength={4000}
+              onChange={(e) => setBrief(e.target.value)}
+              disabled={busy}
+              placeholder="例如：根据确认的款式和人数整理尺码表，标明需单独核对的尺寸。"
+            />
+          </label>
+          <label className="ba-handoff-checkbox">
+            <input
+              type="checkbox"
+              checked={fileRequired}
+              onChange={(e) => setFileRequired(e.target.checked)}
+              disabled={busy}
+            />
+            完成时须提交文件
+          </label>
+          <label className="field">
+            邮件默认抄送，可空
+            <select value={ccActor} onChange={(e) => setCcActor(e.target.value)} disabled={busy}>
+              <option value="">无默认抄送</option>
+              {collaborators
+                .filter((m) => m.can_receive_cc)
+                .map((m) => (
+                  <option key={m.actor_id} value={m.actor_id}>
+                    {m.display_name}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <p className="ba-muted ba-small">
+            协作人会收到上面的交接要求。选中的同事会以账号邮箱预填到后续邮件的抄送栏，发件人可以核对或修改。
+          </p>
+        </>
+      ) : (
+        <p className="ba-muted ba-small">提交后，所选同事可从待办打开这条活动。</p>
+      )}
       {error && (
         <p className="ba-alert" role="alert">
           {error}
         </p>
       )}
-      <button
-        className="primary"
-        disabled={busy || !body.trim() || (!!assignee && !title.trim())}
-        onClick={() => void save()}
-      >
-        {busy ? '提交中…' : assignee ? '保存备注并创建待办' : '保存备注'}
+      <button className="primary" disabled={busy || !ready} onClick={() => void save()}>
+        {busy
+          ? '提交中…'
+          : taskOnly
+            ? '发送协作待办'
+            : assignee
+              ? '保存备注并创建待办'
+              : '保存备注'}
       </button>
     </div>
   );
 }
 
 export const taskLabels = { open: '待处理', in_progress: '处理中', completed: '已完成' };
+
+async function readHandoffFile(file: File) {
+  const extension = /\.(xlsx|csv|pdf)$/i.exec(file.name)?.[1]?.toLowerCase() as
+    keyof typeof collaborationAttachmentTypes | undefined;
+  if (!extension || !file.size || file.size > collaborationAttachmentLimit)
+    throw new Error('请选择不超过 1 MB 的 XLSX、CSV 或 PDF 文件');
+  const contentType = collaborationAttachmentTypes[extension];
+  return new Promise<{ filename: string; content_type: string; content_base64: string }>(
+    (resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () =>
+        resolve({
+          filename: file.name,
+          content_type: contentType,
+          content_base64: String(reader.result).split(',')[1],
+        });
+      reader.onerror = () => reject(new Error('读取交付文件失败，请重新选择文件'));
+      reader.readAsDataURL(file);
+    },
+  );
+}
+
+export function CollaborationTaskAttachment({
+  workspace,
+  task,
+  onUnavailable,
+}: {
+  workspace: string;
+  task: AssignedActivityTask;
+  onUnavailable: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const request = useRef<AbortController | null>(null);
+  useEffect(() => () => request.current?.abort(), []);
+  async function download() {
+    if (busy) return;
+    const controller = new AbortController();
+    request.current = controller;
+    setBusy(true);
+    setError('');
+    try {
+      const file = await api<HandoffFile>(`/task-collaborations/${task.id}/attachment`, {
+        workspace,
+        signal: controller.signal,
+      });
+      if (controller.signal.aborted) return;
+      const bytes = Uint8Array.from(atob(file.content_base64), (letter) => letter.charCodeAt(0));
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.filename;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      if (controller.signal.aborted) return;
+      setError(errorText(e));
+      if (e instanceof HttpError && [401, 403, 404].includes(e.status)) onUnavailable();
+    } finally {
+      if (!controller.signal.aborted) setBusy(false);
+    }
+  }
+  if (!task.attachment) return null;
+  return (
+    <div className="ba-task-result">
+      <button disabled={busy} onClick={() => void download()}>
+        {busy ? '读取文件中…' : `下载 ${task.attachment.filename}`}
+      </button>
+      {error && (
+        <p className="ba-alert" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function ActivityTaskActions({
   workspace,
   task,
   onChanged,
 }: {
   workspace: string;
-  task: ActivityTask;
+  task: AssignedActivityTask;
   onChanged: () => void;
 }) {
   const [completing, setCompleting] = useState(false);
   const [result, setResult] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const request = useRef<AbortController | null>(null);
+  useEffect(() => () => request.current?.abort(), []);
   async function update(status: 'in_progress' | 'completed') {
-    if (busy) return;
+    if (busy || (status === 'completed' && (!result.trim() || (task.attachment_required && !file))))
+      return;
+    const controller = new AbortController();
+    request.current = controller;
     setBusy(true);
     setError('');
     try {
+      const attachment = status === 'completed' && file ? await readHandoffFile(file) : null;
+      if (controller.signal.aborted) return;
       await api(`/tasks/${task.id}`, {
         workspace,
         method: 'PATCH',
+        signal: controller.signal,
         body: {
           version: task.version,
           status,
           ...(status === 'completed' ? { result: result.trim() } : {}),
+          ...(attachment ? { attachment } : {}),
         },
       });
-      activitiesChanged(workspace, task.customer_id);
+      if (controller.signal.aborted) return;
+      activitiesChanged(workspace, 'customer_id' in task ? task.customer_id : undefined);
       setCompleting(false);
+      setFile(null);
       onChanged();
     } catch (e) {
+      if (controller.signal.aborted) return;
       setError(errorText(e));
+      if (e instanceof HttpError && [401, 403, 404].includes(e.status)) onChanged();
     } finally {
-      setBusy(false);
+      if (!controller.signal.aborted) setBusy(false);
     }
   }
   if (task.status === 'completed') return null;
@@ -1363,14 +1716,27 @@ export function ActivityTaskActions({
             <textarea
               rows={3}
               value={result}
+              maxLength={4000}
               onChange={(e) => setResult(e.target.value)}
               disabled={busy}
               placeholder="写明实际处理结果；完成待办不代表已经发信或作出公司承诺。"
             />
           </label>
+          {task.task_only && (
+            <label className="field">
+              {task.attachment_required ? '交付文件，必填' : '交付文件，可选'}
+              <input
+                type="file"
+                accept=".xlsx,.csv,.pdf"
+                disabled={busy}
+                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+              />
+              <small className="ba-muted">支持 XLSX、CSV 或 PDF，单个文件不超过 1 MB。</small>
+            </label>
+          )}
           <button
             className="primary"
-            disabled={busy || !result.trim()}
+            disabled={busy || !result.trim() || (!!task.attachment_required && !file)}
             onClick={() => void update('completed')}
           >
             {busy ? '保存中…' : '保存结果并完成'}

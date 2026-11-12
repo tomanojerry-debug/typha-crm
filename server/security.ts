@@ -1,5 +1,6 @@
 import { createHash, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
+import type { WorkspaceMode } from '../shared/domain.js';
 import type { Database, Sql } from './db.js';
 
 const scryptAsync = promisify(scrypt);
@@ -27,28 +28,42 @@ export interface Context {
   workspaceId: string;
   actorId: string;
   role: 'admin' | 'member';
+  workspaceMode?: WorkspaceMode;
   tx: Sql;
+}
+export interface ScopedOptions {
+  allowTasks?: boolean;
 }
 export async function scoped<T>(
   db: Database,
   actorId: string,
   workspaceId: string,
   fn: (ctx: Context) => Promise<T>,
+  options: ScopedOptions = {},
 ) {
   return db.transaction(async (tx) => {
     const membership = (
-      await tx.query<{ role: 'admin' | 'member' }>(
-        'SELECT role FROM memberships WHERE workspace_id = $1 AND actor_id = $2 AND active FOR SHARE',
+      await tx.query<{ role: 'admin' | 'member'; workspace_mode: WorkspaceMode }>(
+        `SELECT m.role, COALESCE(to_jsonb(m)->>'workspace_mode', 'crm') AS workspace_mode
+         FROM memberships m WHERE m.workspace_id = $1 AND m.actor_id = $2 AND m.active FOR SHARE`,
         [workspaceId, actorId],
       )
     ).rows[0];
     if (!membership) throw new ApiError(404, '工作空间不存在或无权访问');
+    if (membership.workspace_mode === 'tasks' && !options.allowTasks)
+      throw new ApiError(403, '此账号仅可处理分配给自己的协作待办');
     await tx.query(
       "SELECT set_config('app.workspace_id', $1, true), set_config('app.actor_id', $2, true)",
       [workspaceId, actorId],
     );
     await tx.exec('SET LOCAL ROLE light_crm_app');
-    return fn({ workspaceId, actorId, role: membership.role, tx });
+    return fn({
+      workspaceId,
+      actorId,
+      role: membership.role,
+      workspaceMode: membership.workspace_mode,
+      tx,
+    });
   });
 }
 export function requireAdmin(ctx: Pick<Context, 'role'>) {

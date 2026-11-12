@@ -1894,7 +1894,12 @@ export function Workbench(props: Props) {
                 notify={notify}
               />
             ) : section === 'tasks' ? (
-              <TeamTasks key={workspace.id} workspace={workspace.id} askButton={askButton} />
+              <TeamTasks
+                key={workspace.id}
+                workspace={workspace.id}
+                askButton={askButton}
+                onUnauthorized={props.onUnauthorized}
+              />
             ) : section === 'documents' ? (
               <DocumentsWorkspace
                 key={workspace.id}
@@ -3182,6 +3187,8 @@ export function Workbench(props: Props) {
           workspace={workspace.id}
           workspaceName={workspace.name}
           admin={admin}
+          authMode={session.auth_mode}
+          onTeamChanged={props.reload}
           onClose={() => setPreferencesOpen(false)}
           onOpenChat={(id) => {
             setPreferencesOpen(false);

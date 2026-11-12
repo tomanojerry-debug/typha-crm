@@ -42,6 +42,7 @@ import {
   lockedOutgoing,
   outgoingLabels,
   type ComposeOptions,
+  type OutgoingAttachment,
   type OutgoingContent,
   type OutgoingMail,
   type OutgoingSummary,
@@ -56,6 +57,32 @@ type ContactOption = {
   customer_name: string;
   customer_id?: string;
 };
+type HandoffMailSeed = {
+  taskId: string;
+  draftId: string;
+  projectId: string | null;
+  attachment: OutgoingAttachment;
+  cc: string | null;
+};
+
+function newMailContent(
+  email: string | null,
+  accountId: string | null,
+  handoff?: HandoffMailSeed,
+): OutgoingContent {
+  const to = email ? [email.trim().toLowerCase()] : [];
+  const cc = handoff?.cc?.trim().toLowerCase();
+  return {
+    account_id: accountId,
+    project_id: handoff?.projectId ?? null,
+    to,
+    cc: cc && !to.includes(cc) ? [cc] : [],
+    bcc: [],
+    subject: '',
+    body: '',
+    attachments: handoff ? [handoff.attachment] : [],
+  };
+}
 const emailValid = (value: string) => /^[^\s@<>;,]+@[^\s@<>;,]+\.[^\s@<>;,]+$/.test(value);
 const time = (value: string) =>
   new Date(value).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
@@ -402,6 +429,7 @@ export function MailComposer({
   onClose,
   onChanged,
   reply,
+  handoff,
 }: {
   workspace: string;
   person: Pick<Person, 'id' | 'name' | 'email' | 'customer_id' | 'customer_name'>;
@@ -410,6 +438,7 @@ export function MailComposer({
   onClose: () => void;
   onChanged: () => void;
   reply?: { plan: ReplyOptions; source: MailMessage };
+  handoff?: HandoffMailSeed;
 }) {
   const composerIdentity = JSON.stringify([
     workspace,
@@ -418,27 +447,21 @@ export function MailComposer({
     person.customer_id,
     draftId || null,
     reply?.plan.source_id || null,
+    handoff?.taskId || null,
   ]);
   const identity = useRef(composerIdentity);
   identity.current = composerIdentity;
   const initializedIdentity = useRef(composerIdentity);
   const mounted = useRef(true);
   const actionBusy = useRef(false);
-  const [id, setId] = useState(() => draftId || crypto.randomUUID());
+  const [id, setId] = useState(() => draftId || handoff?.draftId || crypto.randomUUID());
   const [saved, setSaved] = useState<OutgoingMail | null>(null);
   const [content, setContent] = useState<OutgoingContent>(
-    reply?.plan.content || {
-      account_id: null,
-      project_id: null,
-      to: person.email ? [person.email.toLowerCase()] : [],
-      cc: [],
-      bcc: [],
-      subject: '',
-      body: '',
-      attachments: [],
-    },
+    reply?.plan.content || newMailContent(person.email, null, handoff),
   );
-  const [baseline, setBaseline] = useState<OutgoingContent>(() => outgoingContentOf(content));
+  const [baseline, setBaseline] = useState<OutgoingContent>(() =>
+    outgoingContentOf(handoff ? newMailContent(person.email, null) : content),
+  );
   const dirty = hasComposerEdits(content, baseline);
   const [options, setOptions] = useState<ComposeOptions | null>(null),
     [loading, setLoading] = useState(true),
@@ -509,7 +532,7 @@ export function MailComposer({
     const loadingIdentity = composerIdentity;
     if (initializedIdentity.current !== loadingIdentity) {
       initializedIdentity.current = loadingIdentity;
-      setId(draftId || crypto.randomUUID());
+      setId(draftId || handoff?.draftId || crypto.randomUUID());
       setSaved(null);
       const empty: OutgoingContent = {
         account_id: null,
@@ -573,24 +596,18 @@ export function MailComposer({
           setRecipientPanelOpen(!!r.mass_sending);
           setStep(r.status === 'approved' ? 'schedule' : r.status === 'draft' ? 'write' : 'status');
         } else {
+          const defaultAccount = o.accounts.length === 1 ? o.accounts[0].id : null;
           const initial = initialComposerRecipientBinding(
             outgoingContentOf(
-              reply?.plan.content || {
-                account_id: o.accounts.length === 1 ? o.accounts[0].id : null,
-                project_id: null,
-                to: person.email ? [person.email.toLowerCase()] : [],
-                cc: [],
-                bcc: [],
-                subject: '',
-                body: '',
-                attachments: [],
-              },
+              reply?.plan.content || newMailContent(person.email, defaultAccount, handoff),
             ),
             person,
             kind === 'people' && !!o.mail_variables,
           );
           setContent(initial);
-          setBaseline(outgoingContentOf(initial));
+          setBaseline(
+            handoff ? newMailContent(person.email, defaultAccount) : outgoingContentOf(initial),
+          );
           setShowCopies(!!(initial.cc.length || initial.bcc.length));
           setStep('write');
         }
@@ -745,6 +762,9 @@ export function MailComposer({
           version: saved?.version || 0,
           content: payloadContent,
           reply_to_message_id: saved?.reply_to_message_id || reply?.plan.source_id || null,
+          ...(handoff || saved?.handoff_task_id
+            ? { handoff_task_id: handoff?.taskId || saved?.handoff_task_id }
+            : {}),
         },
       });
     } catch (failure) {
@@ -1132,22 +1152,24 @@ export function MailComposer({
                         </option>
                       ))}
                     </select>
-                    <button
-                      type="button"
-                      className="text-button"
-                      disabled={busy || !content.account_id}
-                      onClick={() =>
-                        void run(async () => {
-                          const result = await api<{ message: string }>(
-                            `/mail/accounts/${content.account_id}/test-smtp`,
-                            { workspace, method: 'POST', body: {} },
-                          );
-                          setConnectionNotice(result.message);
-                        })
-                      }
-                    >
-                      检查连接
-                    </button>
+                    {options.can_test_sender !== false && (
+                      <button
+                        type="button"
+                        className="text-button"
+                        disabled={busy || !content.account_id}
+                        onClick={() =>
+                          void run(async () => {
+                            const result = await api<{ message: string }>(
+                              `/mail/accounts/${content.account_id}/test-smtp`,
+                              { workspace, method: 'POST', body: {} },
+                            );
+                            setConnectionNotice(result.message);
+                          })
+                        }
+                      >
+                        检查连接
+                      </button>
+                    )}
                   </div>
                   {connectionNotice && (
                     <p className="compose-notice" role="status">
@@ -1241,7 +1263,7 @@ export function MailComposer({
                     <label htmlFor="compose-project">关联项目</label>
                     <select
                       id="compose-project"
-                      disabled={busy || locked}
+                      disabled={busy || locked || !!handoff || !!saved?.handoff_task_id}
                       value={content.project_id || ''}
                       onChange={(e) => update('project_id', e.target.value || null)}
                     >

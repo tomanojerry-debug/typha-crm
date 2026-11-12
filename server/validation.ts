@@ -180,6 +180,7 @@ export const memberCreate = z.strictObject({
   email: loginInput.shape.email,
   display_name: name,
   password: z.string().min(12, '密码至少 12 位').max(256),
+  workspace_mode: z.enum(['crm', 'tasks']).default('crm'),
 });
 
 const personFields = {

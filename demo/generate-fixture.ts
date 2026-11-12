@@ -652,11 +652,14 @@ try {
       }),
     );
     assert(result.task);
+    assert(!result.task.task_only);
     tasks.push(result.task);
   }
-  tasks[1] = await run((ctx) =>
+  const startedTask = await run((ctx) =>
     activities.updateTask(ctx, tasks[1].id, { version: tasks[1].version, status: 'in_progress' }),
   );
+  assert(!startedTask.task_only);
+  tasks[1] = startedTask;
 
   const board = await run((ctx) =>
     createDashboard(ctx, {

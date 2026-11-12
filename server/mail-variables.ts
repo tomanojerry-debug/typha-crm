@@ -20,7 +20,7 @@ import type { CompanyAttributeValue, AttributeValue } from '../shared/attributes
 import type { Person } from '../shared/domain.js';
 import { entitySchema } from './entity-schema.js';
 import { sanitizeAttributeSources } from './attribute-source-visibility.js';
-import { ApiError, requireAdmin, type Context } from './security.js';
+import { ApiError, type Context } from './security.js';
 import * as service from './service.js';
 
 export function variableDataDigest(value: unknown) {
@@ -197,6 +197,7 @@ interface VariableMail {
 export async function previewMailVariables(
   ctx: Context,
   mail: VariableMail,
+  authorizedSender: { id: string; email: string } | null = null,
 ): Promise<MailVariablePreview> {
   const document = mailVariableDocumentSchema.parse(
     mail.content.variable_document ||
@@ -236,17 +237,7 @@ export async function previewMailVariables(
     return exact.length === 1 ? [{ email, person_id: exact[0].id }] : [];
   });
   const project = mail.project_id ? await service.project(ctx, customer.id, mail.project_id) : null;
-  let sender: { email: string } | null = null;
-  if (variables.some((n) => n.root === 'sender') && mail.account_id) {
-    requireAdmin(ctx);
-    sender =
-      (
-        await ctx.tx.query<{ email: string }>(
-          'SELECT email FROM mail_accounts WHERE workspace_id=$1 AND id=$2 AND enabled',
-          [ctx.workspaceId, mail.account_id],
-        )
-      ).rows[0] || null;
-  }
+  const sender = authorizedSender?.id === mail.account_id ? authorizedSender : null;
   const customIds = [
     ...new Set(
       variables

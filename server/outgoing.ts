@@ -6,6 +6,7 @@ import { ApiError, requireAdmin, scoped, type Context } from './security.js';
 import { person } from './people.js';
 import { activeCustomer, customer, project } from './service.js';
 import { unseal } from './mail-secrets.js';
+import { validateActivityHandoffForOutgoing } from './business-activities.js';
 import {
   smtpTransport,
   neteaseSmtp,
@@ -93,20 +94,26 @@ export const outgoingSaveInputSchema = z
     version: z.number().int().nonnegative(),
     content: outgoingContentSchema,
     reply_to_message_id: uuid.nullable().default(null),
+    handoff_task_id: uuid.optional(),
   })
   .strict();
-interface Row extends Omit<OutgoingMail, keyof OutgoingContent> {
+interface Row extends Omit<OutgoingMail, keyof OutgoingContent | 'handoff_task_id'> {
   account_id: string | null;
   project_id: string | null;
+  handoff_task_id?: string | null;
   content: Omit<OutgoingContent, 'account_id' | 'project_id'>;
   approved_digest: string | null;
   started_at: string | null;
 }
-interface Sender {
+interface SenderAccount {
+  id: string;
+  email: string;
+  grant_id?: string;
+}
+interface SenderCredentials {
   id: string;
   email: string;
   secret: string;
-  enabled: boolean;
 }
 export interface OutgoingOptions {
   key?: Buffer;
@@ -121,10 +128,10 @@ function outgoingNow(options: OutgoingOptions) {
   return value;
 }
 const expose = (r: Row): OutgoingMail => {
-  const { content, approved_digest: _digest, started_at: _started, ...rest } = r;
-  return { ...rest, ...content };
+  const { content, approved_digest: _digest, started_at: _started, handoff_task_id, ...rest } = r;
+  return { ...rest, ...content, ...(handoff_task_id ? { handoff_task_id } : {}) };
 };
-const digest = (r: Row) =>
+const digest = (r: Row, grantId?: string) =>
   createHash('sha256')
     .update(
       JSON.stringify([
@@ -146,6 +153,8 @@ const digest = (r: Row) =>
         ...(hasMailVariables(r.content.variable_document)
           ? ['mail_variables', variableDataDigest(r.variable_snapshot)]
           : []),
+        ...(grantId ? ['sender_grant', grantId] : []),
+        ...(r.handoff_task_id ? ['handoff_task', r.handoff_task_id] : []),
       ]),
     )
     .digest('hex');
@@ -177,21 +186,127 @@ async function activeScope(
     throw new ApiError(409, '项目已归档，请重新选择');
   return p;
 }
+async function senderGrantsAvailable(ctx: Context) {
+  // Some existing verification fixtures intentionally use earlier migrations.
+  return (
+    await ctx.tx.query<{ available: boolean }>(
+      "SELECT to_regprocedure('public.crm_member_sender_accounts(uuid)') IS NOT NULL AS available",
+    )
+  ).rows[0].available;
+}
+async function senderAccounts(ctx: Context, id: string | null = null): Promise<SenderAccount[]> {
+  if (ctx.role === 'admin')
+    return (
+      await ctx.tx.query<SenderAccount>(
+        'SELECT id,email FROM mail_accounts WHERE workspace_id=$1 AND enabled AND ($2::uuid IS NULL OR id=$2) ORDER BY created_at,id',
+        [ctx.workspaceId, id],
+      )
+    ).rows;
+  if (ctx.workspaceMode === 'tasks' || !(await senderGrantsAvailable(ctx))) return [];
+  return (
+    await ctx.tx.query<SenderAccount>(
+      'SELECT id,email,grant_id FROM crm_member_sender_accounts($1) WHERE $2::uuid IS NULL OR id=$2',
+      [ctx.workspaceId, id],
+    )
+  ).rows;
+}
 async function sender(ctx: Context, id: string | null) {
-  requireAdmin(ctx);
   if (!id) throw new ApiError(400, '请选择发件邮箱');
-  const r = (
-    await ctx.tx.query<Sender>(
-      'SELECT id,email,secret,enabled FROM mail_accounts WHERE workspace_id=$1 AND id=$2',
+  const [account] = await senderAccounts(ctx, id);
+  if (!account) {
+    if (ctx.role === 'admin') throw new ApiError(409, '发件邮箱不存在或已暂停');
+    throw new ApiError(403, '该发件邮箱不可用或未获得发送授权');
+  }
+  return account;
+}
+async function adminSenderCredentials(ctx: Context, id: string) {
+  requireAdmin(ctx);
+  const account = (
+    await ctx.tx.query<SenderCredentials>(
+      'SELECT id,email,secret FROM mail_accounts WHERE workspace_id=$1 AND id=$2 AND enabled FOR SHARE',
       [ctx.workspaceId, id],
     )
   ).rows[0];
-  if (!r?.enabled) throw new ApiError(409, '发件邮箱不存在或已暂停');
-  return r;
+  if (!account) throw new ApiError(409, '发件邮箱不存在或已暂停');
+  return account;
+}
+async function senderCredentials(ctx: Context, r: Row, account: SenderAccount) {
+  if (ctx.role === 'admin') {
+    const credentials = await adminSenderCredentials(ctx, account.id);
+    if (credentials.email !== r.from_email) throw new ApiError(409, '发件身份已变化');
+    return credentials;
+  }
+  if (!account.grant_id) throw new ApiError(403, '该发件邮箱未获得发送授权');
+  const credentials = (
+    await ctx.tx.query<SenderCredentials>(
+      'SELECT id,email,secret FROM crm_member_outgoing_sender($1,$2,$3,$4,$5)',
+      [ctx.workspaceId, r.id, r.version, r.message_id, account.grant_id],
+    )
+  ).rows[0];
+  if (!credentials) throw new ApiError(403, '客户编辑权限或发件邮箱授权已变化');
+  return credentials;
+}
+export async function senderCapability(ctx: Context) {
+  return { can_send: (await senderAccounts(ctx)).length > 0 };
+}
+async function senderGrantAccount(ctx: Context, id: string) {
+  requireAdmin(ctx);
+  if (!(await senderGrantsAvailable(ctx))) throw new ApiError(503, '发件权限设置尚未初始化');
+  const account = (
+    await ctx.tx.query<{ enabled: boolean }>(
+      'SELECT enabled FROM mail_accounts WHERE workspace_id=$1 AND id=$2',
+      [ctx.workspaceId, id],
+    )
+  ).rows[0];
+  if (!account) throw new ApiError(404, '邮箱连接不存在');
+  return account;
+}
+export async function senderGrants(ctx: Context, id: string) {
+  await senderGrantAccount(ctx, id);
+  return (
+    await ctx.tx.query<{ actor_id: string }>(
+      'SELECT actor_id FROM mail_sender_grants WHERE workspace_id=$1 AND account_id=$2 ORDER BY actor_id',
+      [ctx.workspaceId, id],
+    )
+  ).rows;
+}
+export async function setSenderGrant(ctx: Context, id: string, actorId: string, input: unknown) {
+  const account = await senderGrantAccount(ctx, id);
+  const { allowed } = z.strictObject({ allowed: z.boolean() }).parse(input);
+  const member = (
+    await ctx.tx.query<{ active: boolean; role: string; workspace_mode: string }>(
+      'SELECT active,role,workspace_mode FROM workspace_people WHERE workspace_id=$1 AND actor_id=$2',
+      [ctx.workspaceId, actorId],
+    )
+  ).rows[0];
+  if (!member || member.role !== 'member' || member.workspace_mode !== 'crm')
+    throw new ApiError(400, '请选择当前工作空间的客户工作台成员');
+  if (allowed) {
+    if (!member.active) throw new ApiError(400, '请先启用该成员');
+    if (!account.enabled) throw new ApiError(409, '请先启用发件邮箱');
+    await ctx.tx.query(
+      'INSERT INTO mail_sender_grants(workspace_id,account_id,actor_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING',
+      [ctx.workspaceId, id, actorId],
+    );
+  } else {
+    await ctx.tx.query(
+      'DELETE FROM mail_sender_grants WHERE workspace_id=$1 AND account_id=$2 AND actor_id=$3',
+      [ctx.workspaceId, id, actorId],
+    );
+  }
+  return { ok: true };
 }
 async function ready(ctx: Context, r: Row, useSnapshot = true) {
   if (r.reply_to_message_id) await replySource(ctx, r.reply_to_message_id, r.customer_id);
-  const p = await activeScope(ctx, r.person_id, r.project_id, r.customer_id);
+  await activeScope(ctx, r.person_id, r.project_id, r.customer_id);
+  if (r.handoff_task_id)
+    await validateActivityHandoffForOutgoing(ctx, {
+      taskId: r.handoff_task_id,
+      draftId: r.id,
+      customerId: r.customer_id,
+      projectId: r.project_id,
+      cc: [...r.content.to, ...r.content.cc, ...r.content.bcc],
+    });
   const account = await sender(ctx, r.account_id);
   await validateRecipientBindings(ctx, r.customer_id, r.content.to, r.content.recipient_bindings);
   if (useSnapshot && hasMailVariables(r.content.variable_document) && r.variable_snapshot)
@@ -251,24 +366,21 @@ export async function composeOptions(
   kind: 'people' | 'customers' = 'people',
 ): Promise<ComposeOptions> {
   const p = await target(ctx, personId, kind);
+  const accounts = (await senderAccounts(ctx)).map(({ id, email }) => ({ id, email }));
   return {
     mail_variables: await mailVariableCatalog(ctx),
-    accounts:
-      ctx.role === 'admin'
-        ? (
-            await ctx.tx.query<{ id: string; email: string }>(
-              'SELECT id,email FROM mail_accounts WHERE workspace_id=$1 AND enabled ORDER BY created_at,id',
-              [ctx.workspaceId],
-            )
-          ).rows
-        : [],
+    accounts,
     projects: (
       await ctx.tx.query<{ id: string; name: string }>(
         'SELECT id,name FROM projects WHERE workspace_id=$1 AND customer_id=$2 AND archived_at IS NULL ORDER BY name,id',
         [ctx.workspaceId, p.customer_id],
       )
     ).rows,
-    sender_notice: ctx.role === 'admin' ? null : '当前工作空间邮箱由管理员发送；你可以先保存草稿。',
+    sender_notice:
+      ctx.role === 'admin' || accounts.length
+        ? null
+        : '请联系管理员授权发件邮箱。你可以先保存草稿。',
+    can_test_sender: ctx.role === 'admin',
   };
 }
 async function replySource(ctx: Context, id: string, customerId?: string) {
@@ -313,9 +425,11 @@ export async function replyOptions(
     )
   ).rows;
   const own = new Set(
-    [source.account_email, ...accounts.flatMap((a) => [a.email, ...a.aliases])].map((a) =>
-      a.toLowerCase(),
-    ),
+    [
+      source.account_email,
+      ...options.accounts.map((account) => account.email),
+      ...accounts.flatMap((account) => [account.email, ...account.aliases]),
+    ].map((email) => email.toLowerCase()),
   );
   const addresses = (values: MailMessage['sender']) => [
     ...new Set(
@@ -414,11 +528,14 @@ export async function testSender(
   id: string,
   options: OutgoingOptions,
 ) {
-  if (!options.key) throw new ApiError(503, '服务端邮箱密钥不可用');
-  const account = await scoped(db, actorId, workspaceId, (ctx) => sender(ctx, id));
+  const account = await scoped(db, actorId, workspaceId, (ctx) => {
+    requireAdmin(ctx);
+    if (!options.key) throw new ApiError(503, '服务端邮箱密钥不可用');
+    return adminSenderCredentials(ctx, id);
+  });
   const client = neteaseSmtp(
     account.email,
-    unseal(account.secret, options.key, `${workspaceId}:${account.id}`),
+    unseal(account.secret, options.key!, `${workspaceId}:${account.id}`),
   );
   try {
     await client.verify();
@@ -462,8 +579,18 @@ export async function saveOutgoing(
     : [];
   const { account_id, project_id, ...content } = v.content;
   if (v.version === 0) {
+    if (v.handoff_task_id)
+      await validateActivityHandoffForOutgoing(ctx, {
+        taskId: v.handoff_task_id,
+        draftId: v.id,
+        customerId: p.customer_id,
+        projectId: project_id,
+        cc: [...content.to, ...content.cc, ...content.bcc],
+      });
+    const columns = v.handoff_task_id ? ',handoff_task_id' : '';
+    const values = v.handoff_task_id ? ',$12' : '';
     await ctx.tx.query(
-      'INSERT INTO outgoing_mail(workspace_id,customer_id,person_id,id,created_by,account_id,project_id,content,reply_to_message_id,in_reply_to,reference_ids) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11::jsonb) ON CONFLICT(workspace_id,id) DO NOTHING',
+      `INSERT INTO outgoing_mail(workspace_id,customer_id,person_id,id,created_by,account_id,project_id,content,reply_to_message_id,in_reply_to,reference_ids${columns}) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11::jsonb${values}) ON CONFLICT(workspace_id,id) DO NOTHING`,
       [
         ctx.workspaceId,
         p.customer_id,
@@ -476,13 +603,15 @@ export async function saveOutgoing(
         v.reply_to_message_id,
         parentId,
         JSON.stringify(references),
+        ...(v.handoff_task_id ? [v.handoff_task_id] : []),
       ],
     );
     const saved = await row(ctx, v.id);
     if (
       saved.person_id !== personId ||
       saved.customer_id !== p.customer_id ||
-      saved.reply_to_message_id !== v.reply_to_message_id
+      saved.reply_to_message_id !== v.reply_to_message_id ||
+      (saved.handoff_task_id ?? null) !== (v.handoff_task_id ?? null)
     )
       throw new ApiError(409, '草稿不属于当前联系人');
     // A lost first-save response may retry version zero. Only replay the exact
@@ -509,6 +638,16 @@ export async function saveOutgoing(
   checkVersion(current, v.version);
   if (lockedOutgoing(current.status))
     throw new ApiError(409, '邮件已开始发送，请先核对结果，不能修改或重复发送');
+  if (v.handoff_task_id && v.handoff_task_id !== current.handoff_task_id)
+    throw new ApiError(409, '草稿已关联其他业务范围，请重新打开交接待办');
+  if (current.handoff_task_id)
+    await validateActivityHandoffForOutgoing(ctx, {
+      taskId: current.handoff_task_id,
+      draftId: current.id,
+      customerId: current.customer_id,
+      projectId: project_id,
+      cc: [...content.to, ...content.cc, ...content.bcc],
+    });
   await ctx.tx.query(
     'UPDATE outgoing_mail SET account_id=$3,project_id=$4,content=$5::jsonb WHERE workspace_id=$1 AND id=$2',
     [ctx.workspaceId, v.id, account_id, project_id, JSON.stringify(content)],
@@ -520,7 +659,8 @@ export async function variablePreview(ctx: Context, id: string, input: unknown) 
     r = await row(ctx, id);
   checkVersion(r, v.version);
   await activeScope(ctx, r.person_id, r.project_id, r.customer_id);
-  return previewMailVariables(ctx, r);
+  const [account] = r.account_id ? await senderAccounts(ctx, r.account_id) : [];
+  return previewMailVariables(ctx, r, account);
 }
 export async function approveOutgoing(ctx: Context, id: string, input: unknown) {
   const v = z
@@ -538,7 +678,7 @@ export async function approveOutgoing(ctx: Context, id: string, input: unknown) 
     throw new ApiError(409, '请先取消排期或核对发送结果');
   const a = await ready(ctx, r, false);
   if (hasMailVariables(r.content.variable_document)) {
-    const preview = await previewMailVariables(ctx, r);
+    const preview = await previewMailVariables(ctx, r, a);
     if (!preview.can_confirm) throw new ApiError(409, '邮件变量尚未解决，请先预览并处理所有问题');
     if (v.variable_preview_digest !== preview.digest)
       throw new ApiError(409, '邮件填值或资料已变化，请重新预览并确认具体内容');
@@ -556,7 +696,7 @@ export async function approveOutgoing(ctx: Context, id: string, input: unknown) 
       ctx.workspaceId,
       id,
       a.email,
-      digest(r),
+      digest(r, a.grant_id),
       r.variable_snapshot ? JSON.stringify(r.variable_snapshot) : null,
     ],
   );
@@ -587,14 +727,11 @@ export async function scheduleOutgoing(
     )
   )
     return getOutgoing(ctx, id);
-  if (
-    r.status !== 'approved' ||
-    r.approved_version !== r.version ||
-    r.approved_digest !== digest(r)
-  )
+  if (r.status !== 'approved' || r.approved_version !== r.version)
     throw new ApiError(409, '请先确认当前版本的邮件内容');
   const a = await ready(ctx, r);
-  if (a.email !== r.from_email) throw new ApiError(409, '发件身份已变化，请重新确认');
+  if (r.approved_digest !== digest(r, a.grant_id) || a.email !== r.from_email)
+    throw new ApiError(409, '邮件内容或发件授权已变化，请重新确认');
   const now = outgoingNow(options);
   const at = v.mode === 'now' ? new Date(now) : v.at ? new Date(v.at) : null;
   if (!at || (v.mode === 'later' && (at.getTime() <= now || at.getTime() > now + 366 * 86400000)))
@@ -791,7 +928,7 @@ async function sendMass(db: Database, r: Row, options: OutgoingOptions) {
   const items = await workerContext(db, r, (tx) => deliveries(tx, r));
   for (const d of items) {
     if (d.status !== 'pending') continue;
-    let account: Sender;
+    let account: SenderCredentials;
     try {
       const claimed = await scoped(db, r.created_by, r.workspace_id, async (ctx) => {
         const current = await row(ctx, r.id, true);
@@ -802,8 +939,12 @@ async function sendMass(db: Database, r: Row, options: OutgoingOptions) {
         )
           return null;
         const a = await ready(ctx, current);
-        if (current.approved_digest !== digest(current) || a.email !== current.from_email)
-          throw new ApiError(409, '发件身份或内容已变化');
+        if (
+          current.approved_digest !== digest(current, a.grant_id) ||
+          a.email !== current.from_email
+        )
+          throw new ApiError(409, '发件授权或内容已变化');
+        const credentials = await senderCredentials(ctx, current, a);
         await ctx.tx.query(
           'UPDATE outgoing_mail SET started_at=now() WHERE workspace_id=$1 AND id=$2',
           [r.workspace_id, r.id],
@@ -814,7 +955,7 @@ async function sendMass(db: Database, r: Row, options: OutgoingOptions) {
             [r.workspace_id, d.id],
           )
         ).rows.length;
-        return updated ? a : null;
+        return updated ? credentials : null;
       });
       if (!claimed) break;
       account = claimed;
@@ -876,26 +1017,27 @@ export async function runOutgoing(db: Database, options: OutgoingOptions) {
     )
   ).rows;
   for (const candidate of due) {
-    let claimed: { r: Row; account: Sender } | null = null;
+    let claimed: { r: Row; account: SenderCredentials } | null = null;
     try {
       claimed = await scoped(db, candidate.created_by, candidate.workspace_id, async (ctx) => {
         const r = await row(ctx, candidate.id, true);
         if (r.status !== 'scheduled') return null;
         if (!options.key) throw new ApiError(503, '邮箱密钥不可用，请重新确认发送');
-        const account = await ready(ctx, r);
+        const sender = await ready(ctx, r);
         if (
           r.approved_version !== r.version ||
-          r.approved_digest !== digest(r) ||
-          r.from_email !== account.email
+          r.approved_digest !== digest(r, sender.grant_id) ||
+          r.from_email !== sender.email
         )
-          throw new ApiError(409, '邮件内容或发件身份已变化，请重新确认');
+          throw new ApiError(409, '邮件内容或发件授权已变化，请重新确认');
         if (outgoingNow(options) - new Date(r.scheduled_at!).getTime() > 15 * 60000)
           throw new ApiError(409, '发送时间已超过 15 分钟，请重新确认并选择时间');
-        await ctx.tx.query(
-          "UPDATE outgoing_mail SET status='sending',started_at=now() WHERE workspace_id=$1 AND id=$2",
+        const updated = await ctx.tx.query(
+          "UPDATE outgoing_mail SET status='sending',started_at=now() WHERE workspace_id=$1 AND id=$2 RETURNING id",
           [ctx.workspaceId, r.id],
         );
-        return { r, account };
+        if (!updated.rows.length) throw new ApiError(409, '客户编辑权限已变化，请重新确认');
+        return { r, account: await senderCredentials(ctx, r, sender) };
       });
     } catch (e) {
       await workerContext(db, candidate, (tx) =>
@@ -953,7 +1095,7 @@ export async function reconcileOutgoing(
     const r = await row(ctx, id);
     if (!['uncertain', 'submitted', 'sent_confirmed', 'partial'].includes(r.status))
       throw new ApiError(409, '当前状态无需核对发件记录');
-    const account = await sender(ctx, r.account_id);
+    const account = await senderCredentials(ctx, r, await sender(ctx, r.account_id));
     return { r, account };
   });
   if (r.content.mass_sending) {

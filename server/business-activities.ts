@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
+import { fromBufferPromise } from 'yauzl';
 import { z } from 'zod';
 import type { Database } from './db.js';
 import { ApiError, requireAdmin, scoped, type Context } from './security.js';
@@ -8,6 +9,8 @@ import { sourceMaterials } from './source-index.js';
 import type { KnowledgeSource } from '../shared/knowledge.js';
 import {
   activityBaseField as base,
+  collaborationAttachmentLimit,
+  collaborationAttachmentTypes,
   ordinaryActivityFieldKinds,
   type ActivityField,
   type ActivitySchema,
@@ -17,6 +20,10 @@ import {
   type ActivityDetail,
   type ActivityComment,
   type ActivityTask,
+  type ActivityTaskMailDraft,
+  type ActivityCollaborationMember,
+  type AssignedActivityTask,
+  type CollaborationTaskAttachment,
   type ActivityMember,
   type ActivityGenerationResult,
   type ActivityValue,
@@ -82,6 +89,19 @@ type ActivityRow = BusinessActivity & {
   run_id: string;
   source_versions: Record<string, string>;
 };
+type TaskRow = ActivityTask & {
+  task_only: boolean;
+  collaboration_brief: string | null;
+  attachment_required: boolean;
+  revoked_at: string | null;
+  mail_cc_actor_id: string | null;
+};
+const taskFields = `t.*,to_char(t.due_date,'YYYY-MM-DD') AS due_date,
+  CASE WHEN f.task_id IS NOT NULL THEN json_build_object(
+    'filename',f.filename,'content_type',f.content_type,'size_bytes',f.size_bytes
+  ) END AS attachment`;
+const tasksWithAttachments = `activity_tasks t LEFT JOIN activity_task_attachments f
+  ON f.workspace_id=t.workspace_id AND f.task_id=t.id`;
 type RunRow = {
   id: string;
   state: string;
@@ -721,7 +741,9 @@ export async function detail(ctx: Context, id: string, raw: unknown = {}): Promi
     if (p.record_id) records.add(p.record_id);
   const relatedTasks = (
     await ctx.tx.query<ActivityTask>(
-      "SELECT *,to_char(due_date,'YYYY-MM-DD') AS due_date FROM activity_tasks WHERE workspace_id=$1 AND activity_id=$2 ORDER BY created_at,id",
+      `SELECT ${taskFields},assignee.display_name AS assignee_display_name FROM ${tasksWithAttachments}
+       LEFT JOIN workspace_people assignee ON assignee.workspace_id=t.workspace_id AND assignee.actor_id=t.assignee_id
+       WHERE t.workspace_id=$1 AND t.activity_id=$2 ORDER BY t.created_at,t.id`,
       [ctx.workspaceId, id],
     )
   ).rows;
@@ -752,6 +774,21 @@ export async function members(ctx: Context, customerId: string): Promise<Activit
       [ctx.workspaceId, customerId],
     )
   ).rows.filter((m) => m.can_assign);
+}
+
+export async function collaborationMembers(
+  ctx: Context,
+  customerId: string,
+): Promise<ActivityCollaborationMember[]> {
+  await scope(ctx, uuid.parse(customerId), null, true);
+  return (
+    await ctx.tx.query<ActivityCollaborationMember>(
+      `SELECT actor_id,display_name,workspace_mode,
+         workspace_mode='crm' AND crm_activity_member_access($1,$2,actor_id) AS can_receive_cc
+       FROM workspace_people WHERE workspace_id=$1 AND active ORDER BY display_name,actor_id`,
+      [ctx.workspaceId, customerId],
+    )
+  ).rows;
 }
 
 export interface PreparedGeneration {
@@ -1252,6 +1289,23 @@ export async function update(ctx: Context, id: string, raw: unknown) {
   return readable(ctx, saved);
 }
 
+async function collaborationCcDetails(ctx: Context, customerId: string, actorId: string) {
+  return (
+    await ctx.tx.query<NonNullable<ActivityTaskMailDraft['cc']> & { allowed: boolean }>(
+      `SELECT actor_id,display_name,email,
+         active AND workspace_mode='crm' AND crm_activity_member_access($1,$2,actor_id) AS allowed
+       FROM workspace_people WHERE workspace_id=$1 AND actor_id=$3`,
+      [ctx.workspaceId, customerId, actorId],
+    )
+  ).rows[0];
+}
+
+async function collaborationCc(ctx: Context, customerId: string, actorId: string) {
+  const member = await collaborationCcDetails(ctx, customerId, actorId);
+  if (!member?.allowed || !z.email().safeParse(member.email).success) return null;
+  return { actor_id: member.actor_id, display_name: member.display_name, email: member.email };
+}
+
 export async function comment(ctx: Context, id: string, raw: unknown) {
   const input = z
     .strictObject({
@@ -1260,15 +1314,45 @@ export async function comment(ctx: Context, id: string, raw: unknown) {
       task_title: z.string().trim().min(1).max(500).optional(),
       due_date: z.iso.date().nullable().optional(),
       request_id: uuid.optional(),
+      task_only: z.literal(true).optional(),
+      collaboration_brief: z.string().trim().min(1).max(4000).optional(),
+      attachment_required: z.boolean().optional(),
+      mail_cc_actor_id: uuid.optional(),
     })
     .parse(raw);
   const activity = await rawActivity(ctx, id);
   await scope(ctx, activity.customer_id, activity.project_id, true);
-  await readable(ctx, activity);
   if (activity.archived) throw new ApiError(409, '活动已归档');
+  const materials = await sourceMaterials(ctx, activity.customer_id);
+  await readable(ctx, activity, materials);
+  if (input.task_only) {
+    if (!input.assignee_id || !input.collaboration_brief)
+      throw new ApiError(400, '请填写给协作人的说明并明确选择负责人');
+    if (
+      input.mail_cc_actor_id &&
+      !(await collaborationCc(ctx, activity.customer_id, input.mail_cc_actor_id))
+    )
+      throw new ApiError(400, '所选抄送成员没有此客户访问权限');
+  } else if (
+    input.collaboration_brief !== undefined ||
+    input.attachment_required !== undefined ||
+    input.mail_cc_actor_id !== undefined
+  )
+    throw new ApiError(400, '协作说明、附件和抄送设置仅适用于限定资料的协作待办');
+
   if (input.assignee_id) {
     if (!input.task_title) throw new ApiError(400, '请明确填写跟进事项');
-    if (!(await members(ctx, activity.customer_id)).some((m) => m.actor_id === input.assignee_id))
+    if (input.task_only) {
+      const allowed = (
+        await ctx.tx.query<{ allowed: boolean }>(
+          'SELECT crm_activity_collaboration_grantable($1,$2,$3,$4,$5) AS allowed',
+          [ctx.workspaceId, activity.customer_id, id, activity.project_id, input.assignee_id],
+        )
+      ).rows[0]?.allowed;
+      if (!allowed) throw new ApiError(400, '所选成员无法接收此交办');
+    } else if (
+      !(await members(ctx, activity.customer_id)).some((m) => m.actor_id === input.assignee_id)
+    )
       throw new ApiError(400, '所选成员没有此客户访问权限');
   } else if (input.task_title || input.due_date)
     throw new ApiError(400, '创建待办请明确选择负责人');
@@ -1288,8 +1372,9 @@ export async function comment(ctx: Context, id: string, raw: unknown) {
       throw new ApiError(409, '同一备注请求内容已变化');
     const task =
       (
-        await ctx.tx.query<ActivityTask>(
-          "SELECT *,to_char(due_date,'YYYY-MM-DD') AS due_date FROM activity_tasks WHERE workspace_id=$1 AND comment_id=$2",
+        await ctx.tx.query<TaskRow>(
+          `SELECT ${taskFields} FROM ${tasksWithAttachments}
+           WHERE t.workspace_id=$1 AND t.comment_id=$2`,
           [ctx.workspaceId, existing.id],
         )
       ).rows[0] || null;
@@ -1313,8 +1398,12 @@ export async function comment(ctx: Context, id: string, raw: unknown) {
   let task: ActivityTask | null = null;
   if (input.assignee_id)
     task = (
-      await ctx.tx.query<ActivityTask>(
-        'INSERT INTO activity_tasks(workspace_id,customer_id,id,activity_id,comment_id,project_id,title,assignee_id,created_by,due_date) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *',
+      await ctx.tx.query<TaskRow>(
+        `INSERT INTO activity_tasks(
+           workspace_id,customer_id,id,activity_id,comment_id,project_id,title,assignee_id,created_by,
+           due_date,task_only,collaboration_brief,attachment_required,mail_cc_actor_id
+         ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+         RETURNING *,to_char(due_date,'YYYY-MM-DD') AS due_date,NULL::json AS attachment`,
         [
           ctx.workspaceId,
           activity.customer_id,
@@ -1326,51 +1415,341 @@ export async function comment(ctx: Context, id: string, raw: unknown) {
           input.assignee_id,
           ctx.actorId,
           input.due_date || null,
+          input.task_only === true,
+          input.collaboration_brief || null,
+          input.attachment_required === true,
+          input.mail_cc_actor_id || null,
         ],
       )
     ).rows[0];
   return { comment: saved, task };
 }
-export async function tasks(ctx: Context, raw: unknown = {}) {
+function assignedTask(row: TaskRow): AssignedActivityTask {
+  if (!row.task_only) return row;
+  return {
+    id: row.id,
+    task_only: true,
+    title: row.title,
+    collaboration_brief: row.collaboration_brief!,
+    attachment_required: row.attachment_required,
+    status: row.status,
+    due_date: row.due_date,
+    result: row.result,
+    version: row.version,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    attachment: row.attachment ?? null,
+  };
+}
+
+async function taskById(ctx: Context, id: string, lock = false) {
+  return (
+    await ctx.tx.query<TaskRow>(
+      `SELECT ${taskFields} FROM ${tasksWithAttachments}
+       WHERE t.workspace_id=$1 AND t.id=$2${lock ? ' FOR SHARE OF t' : ''}`,
+      [ctx.workspaceId, uuid.parse(id)],
+    )
+  ).rows[0];
+}
+
+async function currentCollaboration(ctx: Context, id: string) {
+  return (
+    await ctx.tx.query<{ active: boolean }>(
+      'SELECT crm_activity_collaboration_current($1,$2) AS active',
+      [ctx.workspaceId, id],
+    )
+  ).rows[0]?.active;
+}
+
+async function currentTaskAttachment(ctx: Context, id: string) {
+  return (
+    await ctx.tx.query<CollaborationTaskAttachment>(
+      `SELECT filename,content_type,size_bytes,replace(encode(content,'base64'),chr(10),'') AS content_base64
+       FROM activity_task_attachments
+       WHERE workspace_id=$1 AND task_id=$2 AND crm_activity_collaboration_current(workspace_id,task_id)`,
+      [ctx.workspaceId, id],
+    )
+  ).rows[0];
+}
+
+export async function tasks(ctx: Context, raw: unknown = {}): Promise<AssignedActivityTask[]> {
   const q = z
     .strictObject({ status: z.enum(['open', 'in_progress', 'completed']).optional() })
     .parse(raw);
   return (
-    await ctx.tx.query<ActivityTask>(
-      "SELECT *,to_char(due_date,'YYYY-MM-DD') AS due_date FROM activity_tasks WHERE workspace_id=$1 AND assignee_id=$2 AND ($3::text IS NULL OR status=$3) ORDER BY created_at DESC,id LIMIT 100",
-      [ctx.workspaceId, ctx.actorId, q.status || null],
+    await ctx.tx.query<TaskRow>(
+      `SELECT ${taskFields} FROM ${tasksWithAttachments}
+       WHERE t.workspace_id=$1 AND t.assignee_id=$2 AND ($3::text IS NULL OR t.status=$3)
+         AND (NOT $4::boolean OR t.task_only)
+         AND (NOT t.task_only OR crm_activity_collaboration_current(t.workspace_id,t.id))
+       ORDER BY t.created_at DESC,t.id LIMIT 100`,
+      [ctx.workspaceId, ctx.actorId, q.status || null, ctx.workspaceMode === 'tasks'],
     )
-  ).rows;
+  ).rows.map(assignedTask);
 }
-export async function updateTask(ctx: Context, id: string, raw: unknown) {
+
+const taskAttachmentInput = z.strictObject({
+  filename: z
+    .string()
+    .trim()
+    .min(1)
+    .max(160)
+    .refine((value) => !/[\u0000-\u001f\u007f/\\]/.test(value), '文件名无效'),
+  content_type: z.string().trim().max(120),
+  content_base64: z.string().min(4),
+});
+
+async function isWorkbook(data: Buffer) {
+  if (data.length < 4 || data.readUInt32LE(0) !== 0x04034b50) return false;
+  try {
+    const zip = await fromBufferPromise(data, {
+      lazyEntries: true,
+      strictFileNames: true,
+      autoClose: false,
+    });
+    try {
+      if (zip.entryCount > 1000) return false;
+      const names = new Set<string>();
+      let uncompressedBytes = 0;
+      for await (const entry of zip.eachEntry()) {
+        const name = entry.fileName.toLowerCase();
+        if (
+          names.has(name) ||
+          entry.isEncrypted() ||
+          /(?:^|\/)(?:embeddings|activex|customui)(?:\/|$)|vbaproject/i.test(name)
+        )
+          return false;
+        uncompressedBytes += entry.uncompressedSize;
+        if (uncompressedBytes > 25 * 1024 * 1024) return false;
+        names.add(name);
+      }
+      return names.has('[content_types].xml') && names.has('xl/workbook.xml');
+    } finally {
+      zip.close();
+    }
+  } catch {
+    return false;
+  }
+}
+
+async function validateTaskAttachment(input: z.infer<typeof taskAttachmentInput>) {
+  const format = /\.(pdf|csv|xlsx)$/i.exec(input.filename)?.[1].toLowerCase() as
+    keyof typeof collaborationAttachmentTypes | undefined;
+  if (!format) throw new ApiError(400, '附件仅支持 PDF、CSV 或 XLSX');
+  const mime = collaborationAttachmentTypes[format];
+  if (
+    input.content_type &&
+    input.content_type !== mime &&
+    input.content_type !== 'application/octet-stream' &&
+    !(format === 'csv' && input.content_type === 'application/vnd.ms-excel')
+  )
+    throw new ApiError(400, '附件文件类型与文件名不一致');
+  const encoded = input.content_base64;
+  if (encoded.length > Math.ceil(collaborationAttachmentLimit / 3) * 4)
+    throw new ApiError(413, '协作附件不能超过 1 MiB');
+  if (encoded.length % 4 || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded))
+    throw new ApiError(400, '附件编码无效');
+  const data = Buffer.from(encoded, 'base64');
+  if (!data.length || data.toString('base64') !== encoded) throw new ApiError(400, '附件编码无效');
+  if (data.length > collaborationAttachmentLimit) throw new ApiError(413, '协作附件不能超过 1 MiB');
+  if (format === 'pdf' && !/^%PDF-\d\.\d/.test(data.subarray(0, 8).toString('ascii')))
+    throw new ApiError(400, 'PDF 文件内容无效');
+  if (format === 'xlsx' && !(await isWorkbook(data)))
+    throw new ApiError(400, 'XLSX 文件无效或含不支持的嵌入内容，请另存后重试');
+  if (format === 'csv') {
+    try {
+      const text = new TextDecoder('utf-8', { fatal: true }).decode(data);
+      if (!text.trim() || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text))
+        throw new Error('invalid CSV text');
+    } catch {
+      throw new ApiError(400, 'CSV 文件必须为 UTF-8 文本');
+    }
+  }
+  return {
+    filename: input.filename,
+    content_type: mime,
+    content_base64: encoded,
+    size_bytes: data.length,
+  };
+}
+
+export async function updateTask(
+  ctx: Context,
+  id: string,
+  raw: unknown,
+): Promise<AssignedActivityTask> {
   const input = z
     .strictObject({
       version: z.number().int().positive(),
       status: z.enum(['in_progress', 'completed']),
       result: z.string().trim().min(1).max(4000).optional(),
+      attachment: taskAttachmentInput.optional(),
     })
     .parse(raw);
-  const task = (
-    await ctx.tx.query<ActivityTask>(
-      'SELECT * FROM activity_tasks WHERE workspace_id=$1 AND id=$2',
-      [ctx.workspaceId, uuid.parse(id)],
-    )
-  ).rows[0];
-  if (!task) throw new ApiError(404, '待办不存在或无权访问');
+  const task = await taskById(ctx, id);
+  if (!task || (ctx.workspaceMode === 'tasks' && !task.task_only))
+    throw new ApiError(404, '待办不存在或无权访问');
   if (task.assignee_id !== ctx.actorId) throw new ApiError(403, '只有被指派人可以推进或完成此待办');
-  await scope(ctx, task.customer_id, task.project_id);
+  if (task.task_only) {
+    if (!(await currentCollaboration(ctx, task.id)))
+      throw new ApiError(404, '协作待办已撤回或无权访问');
+  } else {
+    await scope(ctx, task.customer_id, task.project_id);
+  }
+  if (input.attachment && (!task.task_only || input.status !== 'completed'))
+    throw new ApiError(400, '只可在完成协作待办时上传附件');
+  if (input.status === 'completed' && task.attachment_required && !input.attachment)
+    throw new ApiError(400, '完成此待办须附上结果文件');
+  const attachment = input.attachment ? await validateTaskAttachment(input.attachment) : null;
   if (task.status === 'completed') {
-    if (input.status === 'completed' && input.result === task.result) return task;
+    if (input.status === 'completed' && input.result === task.result) {
+      if (!attachment && !task.attachment) return assignedTask(task);
+      if (attachment && task.attachment) {
+        const previous = await currentTaskAttachment(ctx, task.id);
+        if (
+          previous &&
+          attachment.filename === previous.filename &&
+          attachment.content_type === previous.content_type &&
+          attachment.content_base64 === previous.content_base64
+        )
+          return assignedTask(task);
+      }
+    }
     throw new ApiError(409, '待办已完成');
   }
   if (input.status === 'completed' && !input.result)
     throw new ApiError(400, '完成待办请填写处理结果');
   const row = (
-    await ctx.tx.query<ActivityTask>(
-      'UPDATE activity_tasks SET status=$3,result=$4 WHERE workspace_id=$1 AND id=$2 AND version=$5 RETURNING *',
+    await ctx.tx.query<TaskRow>(
+      `UPDATE activity_tasks SET status=$3,result=$4
+       WHERE workspace_id=$1 AND id=$2 AND version=$5
+       RETURNING *,to_char(due_date,'YYYY-MM-DD') AS due_date`,
       [ctx.workspaceId, id, input.status, input.result || task.result, input.version],
     )
   ).rows[0];
   if (!row) throw new ApiError(409, '待办已修改，请刷新');
-  return row;
+  if (attachment) {
+    await ctx.tx.query(
+      `INSERT INTO activity_task_attachments(workspace_id,task_id,filename,content_type,content)
+       VALUES($1,$2,$3,$4,decode($5,'base64'))`,
+      [
+        ctx.workspaceId,
+        id,
+        attachment.filename,
+        attachment.content_type,
+        attachment.content_base64,
+      ],
+    );
+    row.attachment = {
+      filename: attachment.filename,
+      content_type: attachment.content_type,
+      size_bytes: attachment.size_bytes,
+    };
+  }
+  return assignedTask(row);
+}
+
+export async function revokeTaskCollaboration(ctx: Context, id: string, raw: unknown) {
+  const { version } = z.strictObject({ version: z.number().int().positive() }).parse(raw);
+  const task = await taskById(ctx, id);
+  if (!task?.task_only) throw new ApiError(404, '协作待办不存在或无权访问');
+  await scope(ctx, task.customer_id, task.project_id, true);
+  if (task.revoked_at) return { id: task.id, version: task.version, revoked_at: task.revoked_at };
+  const revoked = (
+    await ctx.tx.query<{ id: string; version: number; revoked_at: string }>(
+      `UPDATE activity_tasks SET revoked_at=now()
+       WHERE workspace_id=$1 AND id=$2 AND version=$3 AND task_only AND revoked_at IS NULL
+       RETURNING id,version,revoked_at`,
+      [ctx.workspaceId, id, version],
+    )
+  ).rows[0];
+  if (!revoked) throw new ApiError(409, '待办已修改，请刷新');
+  return revoked;
+}
+
+export async function taskCollaborationAttachment(
+  ctx: Context,
+  id: string,
+): Promise<CollaborationTaskAttachment> {
+  const task = await taskById(ctx, id);
+  if (!task?.task_only || task.assignee_id !== ctx.actorId)
+    throw new ApiError(404, '协作附件不存在或无权访问');
+  const attachment = await currentTaskAttachment(ctx, id);
+  if (!attachment) throw new ApiError(404, '协作附件不存在或无权访问');
+  return attachment;
+}
+
+function collaborationDraftId(ctx: Context, taskId: string) {
+  const bytes = createHash('sha256')
+    .update(JSON.stringify(['activity-task-mail-draft', ctx.workspaceId, taskId, ctx.actorId]))
+    .digest()
+    .subarray(0, 16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x80;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+export async function validateActivityHandoffForOutgoing(
+  ctx: Context,
+  binding: {
+    taskId: string;
+    draftId: string;
+    customerId: string;
+    projectId: string | null;
+    cc: readonly string[];
+  },
+): Promise<void> {
+  await scope(ctx, binding.customerId, binding.projectId, true);
+  if (binding.draftId !== collaborationDraftId(ctx, binding.taskId))
+    throw new ApiError(409, '邮件草稿与当前账号的协作待办不一致，请从原活动重新打开');
+  const task = await taskById(ctx, binding.taskId, true);
+  if (
+    !task?.task_only ||
+    task.status !== 'completed' ||
+    !task.result ||
+    !task.attachment ||
+    task.customer_id !== binding.customerId ||
+    task.project_id !== binding.projectId ||
+    !(await currentCollaboration(ctx, task.id))
+  )
+    throw new ApiError(409, '原协作待办或附件已失效，请重新核对邮件');
+  await readable(ctx, await rawActivity(ctx, task.activity_id));
+  if (task.mail_cc_actor_id && binding.cc.length) {
+    const member = await collaborationCcDetails(ctx, task.customer_id, task.mail_cc_actor_id);
+    if (!member) throw new ApiError(409, '原默认抄送成员已失效，请重新核对抄送');
+    const email = member.email.trim().toLowerCase();
+    if (!member.allowed && binding.cc.some((address) => address.trim().toLowerCase() === email))
+      throw new ApiError(409, '原默认抄送成员已失去此客户访问权限，请移除此抄送后重新核对');
+  }
+}
+
+export async function activityTaskMailDraft(
+  ctx: Context,
+  activityId: string,
+  taskId: string,
+): Promise<ActivityTaskMailDraft> {
+  const activity = await rawActivity(ctx, activityId);
+  await scope(ctx, activity.customer_id, activity.project_id, true);
+  await readable(ctx, activity);
+  const task = await taskById(ctx, taskId);
+  if (
+    !task?.task_only ||
+    task.activity_id !== activity.id ||
+    task.status !== 'completed' ||
+    !task.result
+  )
+    throw new ApiError(404, '已完成的协作待办不存在或无权访问');
+  const attachment = await currentTaskAttachment(ctx, taskId);
+  if (!attachment) throw new ApiError(404, '协作附件不存在、已撤回或无权访问');
+  return {
+    draft_id: collaborationDraftId(ctx, task.id),
+    customer_id: activity.customer_id,
+    project_id: activity.project_id,
+    result: task.result,
+    attachment,
+    cc: task.mail_cc_actor_id
+      ? await collaborationCc(ctx, activity.customer_id, task.mail_cc_actor_id)
+      : null,
+  };
 }
