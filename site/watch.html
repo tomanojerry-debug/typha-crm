@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101815" />
+    <title>Typha CRM · 产品演示</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        background: #101815;
+        color: #edf4ee;
+        font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      }
+      body {
+        margin: 0;
+      }
+      main {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: clamp(24px, 5vw, 64px) 0 40px;
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        color: #b2d6c5;
+        font-size: 14px;
+      }
+      a {
+        color: inherit;
+        text-underline-offset: 3px;
+      }
+      h1 {
+        margin: 24px 0 18px;
+        font-size: clamp(22px, 4vw, 32px);
+        line-height: 1.2;
+      }
+      video {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #060b09;
+        border: 1px solid #394d42;
+        border-radius: 12px;
+        box-sizing: border-box;
+      }
+      p {
+        margin: 14px 0 0;
+        color: #c0d1c7;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      button {
+        margin-top: 12px;
+        padding: 8px 14px;
+        border: 1px solid #9bd4b7;
+        border-radius: 7px;
+        color: #102a1f;
+        background: #c8f0da;
+        font: inherit;
+        cursor: pointer;
+      }
+      :focus-visible {
+        outline: 2px solid #a5e2c2;
+        outline-offset: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav aria-label="Typha CRM">
+        <a href="https://github.com/tomanojerry-debug/typha-crm#readme">返回 GitHub 仓库</a>
+        <a href="./">在线体验</a>
+      </nav>
+      <h1>Typha CRM 产品演示</h1>
+      <video
+        id="demo-video"
+        aria-label="Typha CRM 产品演示，1 分 41 秒"
+        controls
+        playsinline
+        preload="metadata"
+        poster="https://raw.githubusercontent.com/tomanojerry-debug/typha-crm/6c8823102a7e37780ad44c969a0492ba6534e4d7/docs/images/typha-crm-demo-cover-forest-detail.jpg"
+        src="https://github.com/tomanojerry-debug/typha-crm/releases/download/demo-2026-11-13/Typha-CRM-v7.mp4"
+      ></video>
+      <button id="enable-sound" type="button" hidden>开启声音</button>
+      <p id="media-error" role="status" hidden>
+        视频暂时无法加载。
+        <a href="https://github.com/tomanojerry-debug/typha-crm/releases/tag/demo-2026-11-13"
+          >查看视频发布页</a
+        >
+      </p>
+      <p>演示使用虚构业务资料和模拟邮件。片中的「待跟进邮件」为开发版预览。</p>
+    </main>
+    <script>
+      const video = document.querySelector('#demo-video');
+      const enableSound = document.querySelector('#enable-sound');
+      const mediaError = document.querySelector('#media-error');
+
+      video.addEventListener('volumechange', () => {
+        enableSound.hidden = !video.muted;
+      });
+      video.addEventListener('error', () => {
+        mediaError.hidden = false;
+      });
+      enableSound.addEventListener('click', () => {
+        video.muted = false;
+        video.focus();
+        if (video.paused) void video.play().catch(() => {});
+      });
+
+      async function startPlayback() {
+        try {
+          await video.play();
+        } catch (error) {
+          if (error.name === 'NotAllowedError') {
+            video.muted = true;
+            await video.play().catch(() => {});
+          }
+        }
+      }
+
+      void startPlayback();
+    </script>
+  </body>
+</html>
