@@ -2,7 +2,7 @@
 
 **把客户沟通，变成有依据的下一步行动。**
 
-[![Typha CRM 产品演示封面，点击观看（1 分 41 秒）](docs/images/typha-crm-demo-cover.jpg)][product-demo-video]
+[![Typha CRM 产品演示封面，点击观看（1 分 41 秒）](docs/images/typha-crm-demo-cover-forest.jpg)][product-demo-video]
 
 [观看产品演示（1:41）][product-demo-video] · [在线体验](https://tomanojerry-debug.github.io/typha-crm/) · [使用场景](#主要使用场景) · [产品介绍](https://tomanojerry-debug.github.io/typha-crm/about.html) · [本机部署](docs/getting-started.md) · [技术架构](docs/architecture.md)
 
