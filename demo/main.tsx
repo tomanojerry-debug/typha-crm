@@ -7,7 +7,6 @@ import type { DemoFixture } from './types';
 import { actorId, demoAccounts, type DemoAccount } from './accounts';
 import { demoRuntime, onDemoLogout } from './api';
 import { DemoLogin } from './Login';
-import { demoChartFilename, sampleChartHref } from './runtime';
 import '../src/style.css';
 import '../src/workbench.css';
 import '../src/people.css';
@@ -64,11 +63,6 @@ function DemoExperience() {
               <span>切换账号</span>
             </button>
           )}
-          {account === 'designer' && (
-            <a href={sampleChartHref()} download={demoChartFilename}>
-              下载示例尺码表
-            </a>
-          )}
           <button aria-label="使用提示" onClick={() => help.current?.showModal()}>
             <HelpCircle size={14} />
             <span>使用提示</span>
@@ -108,30 +102,9 @@ function DemoExperience() {
             <X size={18} />
           </button>
         </header>
-        <p>
-          你正在使用产品的实际前端界面。此空间预置了示例客户、沟通记录、待办与产品反馈，方便直接体验。
-        </p>
-        <ol>
-          <li>
-            <strong>查看客户。</strong>{' '}
-            搜索公司，点击名称打开档案，或使用预览查看客户背景与沟通记录。
-          </li>
-          <li>
-            <strong>接着处理。</strong>{' '}
-            以设计师进入“协作待办”，下载示例尺码表，填写结果并提交附件。切回外贸业务员，可在
-            Northstar 的 A214 样衣反馈活动里查看交付。
-          </li>
-          <li>
-            <strong>分析反馈。</strong>{' '}
-            以老板身份打开“报告”中的售后看板，按款式、问题与尺码筛选，查看原话或导出明细。
-          </li>
-          <li>
-            <strong>了解 AI 流程。</strong>{' '}
-            在已有对话中查看准备好的沟通总结与来源。在线体验不调用真实模型或发送邮件。
-          </li>
-        </ol>
+        <p>选择一个角色，即可浏览空白工作空间与该角色可访问的页面。</p>
         <p className="demo-help-note">
-          资料修改仅保留在当前页面，刷新或重置后恢复初始示例。连接自己的资料与模型服务，请按本机部署说明运行完整应用。
+          体验在当前页面运行。安装完整应用后，可以在自己的设备上录入资料、配置邮箱和模型服务。
         </p>
         <button className="demo-help-start" onClick={() => help.current?.close()}>
           开始体验

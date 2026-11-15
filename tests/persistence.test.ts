@@ -4,8 +4,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { migrate, openDatabase } from '../server/db.js';
-import { createWorkspace, seedDemo } from '../server/bootstrap.js';
+import { createWorkspace } from '../server/bootstrap.js';
 import { scoped } from '../server/security.js';
+import { insert } from '../server/service.js';
+import { createPerson } from '../server/people.js';
 import { defaultView } from '../shared/views.js';
 
 it('persists a workspace across restarts and rejects a second process opening its local database', async () => {
@@ -22,10 +24,14 @@ it('persists a workspace across restarts and rejects a second process opening it
         displayName: 'Test',
         password: 'test-only-password-14356',
       });
-      await seedDemo(db, space.workspaceId, space.actorId);
-      await scoped(db, space.actorId, space.workspaceId, async ({ tx }) => {
-        const customer = (await tx.query<{ id: string }>('SELECT id FROM customers LIMIT 1'))
-          .rows[0];
+      await scoped(db, space.actorId, space.workspaceId, async (ctx) => {
+        const { tx } = ctx;
+        const customer = await insert(ctx, 'customers', {
+          name: 'Persistent customer',
+          type: 'group',
+          source: 'other',
+        });
+        await createPerson(ctx, { customer_id: String(customer.id), name: 'Persistent contact' });
         const listId = randomUUID();
         await tx.query(
           "INSERT INTO record_lists(workspace_id,actor_id,id,object,name) VALUES($1,$2,$3,'customers','Persistent list')",
@@ -57,11 +63,11 @@ it('persists a workspace across restarts and rejects a second process opening it
         const result = await tx.query<{ count: number }>(
           'SELECT count(*)::int AS count FROM customers',
         );
-        expect(result.rows[0].count).toBe(5);
+        expect(result.rows[0].count).toBe(1);
         expect(
           (await tx.query<{ count: number }>('SELECT count(*)::int AS count FROM people')).rows[0]
             .count,
-        ).toBe(5);
+        ).toBe(1);
         expect(
           (await tx.query<{ name: string }>('SELECT name FROM record_lists')).rows[0].name,
         ).toBe('Persistent list');

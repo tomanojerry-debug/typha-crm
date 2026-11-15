@@ -4,28 +4,28 @@ export const demoAccounts = [
   {
     key: 'boss',
     title: '老板',
-    name: '林然',
-    email: 'lin@typha-demo.invalid',
+    name: '管理员',
+    email: 'admin@typha-demo.invalid',
     summary: '查看全量客户和团队授权',
   },
   {
     key: 'export',
     title: '外贸业务员',
-    name: '许舟',
+    name: '外贸成员',
     email: 'export@typha-demo.invalid',
     summary: '跟进获授权的海外客户',
   },
   {
     key: 'domestic',
     title: '国内业务员',
-    name: '顾桐',
+    name: '国内成员',
     email: 'domestic@typha-demo.invalid',
     summary: '跟进获授权的国内客户',
   },
   {
     key: 'designer',
     title: '设计师',
-    name: '程禾',
+    name: '设计成员',
     email: 'design@typha-demo.invalid',
     summary: '处理交接任务与提交尺码表',
   },
@@ -41,16 +41,6 @@ const accountIds = {
   export: '13a092ca-30ab-435b-b356-2b2a920e9074',
   domestic: '952951ce-b623-4cd3-b3ef-c045c827931b',
   designer: '52c86b73-1afc-4d4a-b60b-7b88caf6b9d3',
-};
-
-const assignedCustomers = {
-  export: ['25136b14-9116-4f65-805c-a99e6ffb2b76', 'fef605eb-13a6-4d93-b611-b659099b2210'],
-  domestic: [
-    '8410e8c9-09bf-44ad-9b1f-0fd7b8ee7c00',
-    '813d1832-2aaa-4895-a913-834c703106d5',
-    'c6d9a85e-47c6-4ea1-ba38-8e291c4a943f',
-    '861585b6-49a1-41bc-b4fb-c2c9a3892ac9',
-  ],
 };
 
 export function actorId(fixture: DemoFixture, account: DemoAccount) {
@@ -75,7 +65,7 @@ export function demoSession(fixture: DemoFixture, account: DemoAccount) {
     workspaces: [
       {
         id: fixture.workspaceId,
-        name: 'Typha 示例工作空间',
+        name: 'Typha 在线工作空间',
         role: member.role,
         workspace_mode: member.workspace_mode,
       },
@@ -86,7 +76,7 @@ export function demoSession(fixture: DemoFixture, account: DemoAccount) {
 
 export function customerGrants(fixture: DemoFixture, id: string) {
   return (['export', 'domestic'] as const)
-    .filter((account) => assignedCustomers[account].includes(id))
+    .filter((account) => fixture.salesCustomerIds?.[account].includes(id))
     .map((account) => ({ actor_id: actorId(fixture, account), access: 'editor' }));
 }
 
@@ -107,7 +97,7 @@ const sharedSnapshots = new Set([
 export function demoFixtureForAccount(fixture: DemoFixture, account: SalesAccount): DemoFixture {
   const id = actorId(fixture, account);
   const permitted = (value: unknown) =>
-    typeof value === 'string' && assignedCustomers[account].includes(value);
+    typeof value === 'string' && !!fixture.salesCustomerIds?.[account].includes(value);
   const owns = (row: Row) => permitted(row.customer_id);
   const ownedRow = (row: Row): Row => ({
     ...row,

@@ -317,7 +317,7 @@ function Login({ onLogin }: { onLogin: () => void }) {
         <details className="setup-hint">
           <summary>首次本地使用</summary>
           <p>
-            在项目目录运行 <code>npm run setup -- --demo</code>。随机登录凭据保存在{' '}
+            在项目目录运行 <code>npm run setup</code>。随机登录凭据保存在{' '}
             <code>.local/initial-login.txt</code>。
           </p>
         </details>

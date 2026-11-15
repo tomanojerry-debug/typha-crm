@@ -20,7 +20,7 @@
     "check": "npm run format:check && npm run test && npm run build",
     "demo:build": "node demo/build.mjs",
     "demo:fixtures": "node --import tsx demo/generate-fixture.ts",
-    "demo:test": "vitest run --config demo/vitest.config.ts"
+    "demo:test": "node --import tsx demo/generate-test-fixture.ts && vitest run --config demo/vitest.config.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.14",

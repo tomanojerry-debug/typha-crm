@@ -1,19 +1,48 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createDemoRuntime } from './runtime';
-import fixtureData from './fixture.json';
+import { testFixture as fixture } from './test-fixture';
+import publicData from './fixture.json';
 import type { DemoFixture } from './types';
 import type { ActivityDetail, CollaborationTask } from '../shared/business-activities';
 import type { CustomerList } from '../shared/views';
 
-const fixture = fixtureData as DemoFixture;
-const sampleActivity = '/activities/421c32a3-a9fc-4527-b8bd-2fad99359a72';
+const sampleActivity = `/activities/${fixture.handoff!.activityId}`;
 const csv = {
-  filename: 'A214.csv',
+  filename: 'fixture.csv',
   content_type: 'text/csv',
   content_base64: btoa('size,chest_cm\nM,82\n'),
 };
 
 describe('public team experience', () => {
+  it('publishes an empty workspace for every role', async () => {
+    const runtime = createDemoRuntime(publicData as DemoFixture);
+    for (const role of ['boss', 'export', 'domestic'] as const) {
+      runtime.choose(role);
+      for (const path of [
+        '/customers',
+        '/projects',
+        '/people',
+        '/mail/messages',
+        '/chats/page?limit=10',
+      ]) {
+        expect(await runtime.request(path)).toMatchObject({ items: [] });
+      }
+      for (const path of [
+        '/activity-types',
+        '/agent/preferences',
+        '/mail/accounts',
+        '/reports/dashboards',
+        '/tasks',
+      ]) {
+        expect(await runtime.request(path)).toEqual([]);
+      }
+      expect(await runtime.request('/notes')).toMatchObject({ notes: [], drafts: [] });
+    }
+    runtime.choose('designer');
+    expect(await runtime.request('/tasks')).toEqual([]);
+    expect(publicData.analysisAll.rows).toEqual([]);
+  });
+
   it('starts signed out and invalidates an in-flight read when choosing another account', async () => {
     const runtime = createDemoRuntime(fixture);
     await expect(runtime.request('/session')).rejects.toMatchObject({ status: 401 });
@@ -22,7 +51,7 @@ describe('public team experience', () => {
     runtime.choose('designer');
     await expect(read).rejects.toMatchObject({ status: 401 });
     expect(await runtime.request('/session')).toMatchObject({
-      actor: { display_name: '程禾' },
+      actor: { display_name: '设计成员' },
       workspaces: [{ role: 'member', workspace_mode: 'tasks' }],
     });
     await runtime.request('/auth/logout', { method: 'POST' });
@@ -35,9 +64,14 @@ describe('public team experience', () => {
     const boss = await runtime.request<CustomerList>('/customers');
     expect(boss.total).toBe(6);
     const members = await runtime.request<{ display_name: string }[]>('/members');
-    expect(members.map((member) => member.display_name)).toEqual(['林然', '许舟', '顾桐', '程禾']);
-    const foreign = boss.items.find((row) => row.name === 'Northstar 舞蹈用品')!;
-    const local = boss.items.find((row) => row.name === '松林艺术中心')!;
+    expect(members.map((member) => member.display_name)).toEqual([
+      '管理员',
+      '外贸成员',
+      '国内成员',
+      '设计成员',
+    ]);
+    const foreign = boss.items.find((row) => row.name === 'Fixture Company 01')!;
+    const local = boss.items.find((row) => row.name === 'Fixture Company 06')!;
     expect(await runtime.request(`/customers/${foreign.id}/access`)).toHaveLength(1);
 
     runtime.choose('export');
@@ -76,7 +110,7 @@ describe('public team experience', () => {
       }
       const [task] = await runtime.request<CollaborationTask[]>('/tasks');
       expect(task).toMatchObject({
-        title: '补齐 A214 样衣尺码表',
+        title: 'Fixture handoff task',
         attachment_required: true,
         status: 'open',
       });

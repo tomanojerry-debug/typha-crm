@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import fixtureData from './fixture.json';
-import type { DemoFixture } from './types';
+import { testFixture as fixture } from './test-fixture';
+import publicData from './fixture.json';
 import { snapshotKey } from './types';
 import { createDemoTransport, DEMO_UNAVAILABLE } from './transport';
 import { api, demoRuntime, isDemoRuntime, streamApi, watchApi } from './api';
@@ -12,7 +12,6 @@ import type { ReportDashboard, ReportQueryResult } from '../shared/reports';
 import type { KnowledgeGraphView } from '../shared/knowledge';
 import { userPreferenceOptions, type UserPreferenceSetting } from '../shared/user-preferences';
 
-const fixture = fixtureData as DemoFixture;
 afterEach(() => vi.unstubAllGlobals());
 
 describe('static product transport', () => {
@@ -523,8 +522,8 @@ describe('static product transport', () => {
     demoRuntime.choose('boss');
     try {
       expect(await api('/session')).toMatchObject({
-        actor: { id: fixture.actorId },
-        workspaces: [{ id: fixture.workspaceId, role: 'admin' }],
+        actor: { id: publicData.actorId },
+        workspaces: [{ id: publicData.workspaceId, role: 'admin' }],
       });
     } finally {
       demoRuntime.reset();

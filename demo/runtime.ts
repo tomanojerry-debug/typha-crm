@@ -4,7 +4,6 @@ import {
   collaborationAttachmentTypes,
   type ActivityDetail,
   type ActivityTask,
-  type CollaborationTask,
   type CollaborationTaskAttachment,
 } from '../shared/business-activities';
 import {
@@ -17,11 +16,6 @@ import {
 } from './accounts';
 import { createDemoTransport, DEMO_UNAVAILABLE, type DemoRequestOptions } from './transport';
 import type { DemoFixture } from './types';
-
-const chartTaskId = 'e2aa2773-b3bd-4659-b112-2f37839e99c4';
-const chartActivityId = '421c32a3-a9fc-4527-b8bd-2fad99359a72';
-const csvContent = 'Size,Chest (cm),Waist (cm),Hip (cm)\nS,78,62,86\nM,82,66,90\nL,86,70,94\n';
-export const demoChartFilename = 'A214-size-chart.csv';
 
 const denied = () => new HttpError(DEMO_UNAVAILABLE, 403);
 const missing = () => new HttpError('示例记录不存在', 404);
@@ -78,25 +72,11 @@ export function createDemoRuntime(fixture: DemoFixture) {
     domestic: createDemoTransport(demoFixtureForAccount(fixture, 'domestic')),
   };
   const members = demoMembers(fixture);
-  const activity = fixture.snapshots[`/activities/${chartActivityId}`] as
-    ActivityDetail | undefined;
+  const handoff = fixture.handoff;
+  const activityPath = handoff && `/activities/${handoff.activityId}`;
   let account: DemoAccount | null = null;
   let sessionVersion = 0;
-  const freshTask = (): CollaborationTask => ({
-    id: chartTaskId,
-    task_only: true,
-    title: '补齐 A214 样衣尺码表',
-    collaboration_brief:
-      '请核对 A214 新版样衣 S／M／L 的胸围、腰围和臀围。表格统一用厘米，完成后附上确认版，交给业务员复核。',
-    attachment_required: true,
-    attachment: null,
-    status: 'open',
-    result: null,
-    due_date: null,
-    version: 1,
-    created_at: '2026-11-11T02:00:00.000Z',
-    updated_at: '2026-11-11T02:00:00.000Z',
-  });
+  const freshTask = () => (handoff ? structuredClone(handoff.task) : null);
   let task = freshTask();
   let attachment: CollaborationTaskAttachment | null = null;
 
@@ -113,8 +93,9 @@ export function createDemoRuntime(fixture: DemoFixture) {
   function designerRequest(path: string, url: URL, method: string, body: unknown) {
     if (path === '/tasks' && method === 'GET') {
       const status = url.searchParams.get('status');
-      return !status || status === task.status ? [task] : [];
+      return task && (!status || status === task.status) ? [task] : [];
     }
+    if (!task) throw missing();
     if (path === `/task-collaborations/${task.id}/attachment` && method === 'GET' && attachment)
       return attachment;
     if (path !== `/tasks/${task.id}` || method !== 'PATCH') throw missing();
@@ -179,18 +160,13 @@ export function createDemoRuntime(fixture: DemoFixture) {
     if (route === '/mail-sender-capability' && method === 'GET') return { can_send: false } as T;
     if (/^\/mail-accounts\/[^/]+\/senders$/.test(route) && method === 'GET' && active === 'boss')
       return [] as T;
-    if (
-      route === `/activities/${chartActivityId}` &&
-      method === 'GET' &&
-      activity &&
-      active !== 'domestic'
-    ) {
+    if (route === activityPath && method === 'GET' && task && active !== 'domestic') {
       const result = await transports[active].request<ActivityDetail>(path, options);
       const collaboration: ActivityTask = {
         ...task,
-        activity_id: activity.id,
-        customer_id: activity.customer_id,
-        project_id: activity.project_id,
+        activity_id: result.id,
+        customer_id: result.customer_id,
+        project_id: result.project_id,
         assignee_id: actorId(fixture, 'designer'),
         assignee_display_name: members.find(
           (member) => member.actor_id === actorId(fixture, 'designer'),
@@ -203,8 +179,4 @@ export function createDemoRuntime(fixture: DemoFixture) {
     return transports[active].request<T>(path, options);
   }
   return { choose, reset, request };
-}
-
-export function sampleChartHref() {
-  return `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`;
 }

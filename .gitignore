@@ -13,3 +13,4 @@ __pycache__/
 test-results/
 playwright-report/
 .pages-build/
+demo/.generated-test-fixture.json

@@ -15,8 +15,8 @@ export function DemoLogin({ onChoose }: { onChoose(account: DemoAccount): void }
         <div className="demo-login-brand">
           Typha <span>AI CRM</span>
         </div>
-        <h1>登录演示工作空间</h1>
-        <p className="demo-login-intro">选择一个示例账号，体验团队如何跟进客户、交接尺码表。</p>
+        <h1>打开在线工作空间</h1>
+        <p className="demo-login-intro">选择一个角色，浏览对应的空白工作空间。</p>
         <div className="demo-login-accounts" aria-label="演示账号">
           {demoAccounts.map((account) => {
             const Icon = accountIcons[account.key];
@@ -42,7 +42,7 @@ export function DemoLogin({ onChoose }: { onChoose(account: DemoAccount): void }
           })}
         </div>
         <p className="demo-login-note">
-          <ShieldCheck size={16} aria-hidden="true" /> 使用虚构资料，操作仅保存在当前页面。
+          <ShieldCheck size={16} aria-hidden="true" /> 操作仅在当前页面有效。
         </p>
       </div>
     </main>

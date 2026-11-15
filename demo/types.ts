@@ -5,10 +5,14 @@ import type {
 } from '../shared/activity-analysis';
 
 /** Public, synthetic data only. Snapshots are responses from the real isolated API. */
+import type { CollaborationTask } from '../shared/business-activities';
+
 export interface DemoFixture {
   version: 1;
   workspaceId: string;
   actorId: string;
+  salesCustomerIds?: Record<'export' | 'domestic', string[]>;
+  handoff?: { activityId: string; task: CollaborationTask };
   feedbackBoardId: string;
   summaryChatId: string;
   memoryChatId: string;
