@@ -90,6 +90,27 @@
   font-size: 16px;
   margin: 0 0 5px;
 }
+.mail-connection-guide {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--theme-line, #e3e6eb);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.mail-connection-guide p,
+.mail-connection-guide ol {
+  margin: 0;
+}
+.mail-connection-guide ol {
+  padding-inline-start: 1.5em;
+}
+.mail-connection-guide a {
+  justify-self: start;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .connection-form label {
   display: grid;
   gap: 8px;

@@ -32,6 +32,8 @@ import type { Customer, Person, Project } from '../shared/domain';
 import type { Selection } from './Workbench';
 import './connections.css';
 import './mail-reader.css';
+const neteaseAuthorizationHelp =
+  'https://help.mail.126.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac2a5feb28b66796d3b';
 const time = (s: string | null) =>
   s ? new Date(s).toLocaleString('zh-CN', { hour12: false, timeZone: 'Asia/Shanghai' }) : '暂无';
 function MailSettings({
@@ -178,6 +180,20 @@ function MailSettings({
           }}
         >
           <h2>连接邮箱</h2>
+          <div className="mail-connection-guide">
+            <p>
+              支持网易个人邮箱
+              @163.com、@126.com、@yeah.net。在完整应用中，由工作空间管理员连接邮箱。
+            </p>
+            <ol>
+              <li>登录网易邮箱网页端，前往「设置 → POP3/SMTP/IMAP」，开启「IMAP/SMTP 服务」。</li>
+              <li>已开启服务时，点击「新增授权密码」。按网易提示验证身份并复制生成的授权码。</li>
+              <li>在下方填写完整邮箱地址和授权码，点击「连接并同步」。</li>
+            </ol>
+            <a href={neteaseAuthorizationHelp} target="_blank" rel="noreferrer">
+              查看网易官方开通指引
+            </a>
+          </div>
           <label>
             邮箱地址
             <input
@@ -189,7 +205,7 @@ function MailSettings({
             />
           </label>
           <label>
-            IMAP 授权码
+            客户端授权码
             <input
               name="authorization_code"
               type="password"
@@ -197,14 +213,18 @@ function MailSettings({
               minLength={6}
               maxLength={200}
               autoComplete="new-password"
-              placeholder="在邮箱设置中开启 IMAP / SMTP 并生成授权码"
+              placeholder="填写网易生成的客户端授权码"
             />
+            <small>登录密码用来登录网易网页端，请在这里填写网易生成的授权码。</small>
           </label>
           <label>
             同一邮箱的其他发件地址（可选）
             <input name="aliases" placeholder="多个地址用逗号分隔" />
             <small>仅填写自己的地址，用于区分自己与外部联系人。</small>
           </label>
+          <p className="muted">
+            首次同步会分批读取收件箱和可识别的已发送文件夹中的历史邮件。同事需要用此邮箱发信时，由管理员另行授权。
+          </p>
           <p className="muted">授权码加密保存，用于同步邮件及执行你确认的发送。</p>
           <div className="connection-actions">
             <button type="button" disabled={!!busy} onClick={() => setAdding(false)}>
@@ -314,7 +334,7 @@ function MailSettings({
               }}
             >
               <label>
-                新的 IMAP 授权码
+                新的客户端授权码
                 <input
                   name="code"
                   type="password"
@@ -323,6 +343,7 @@ function MailSettings({
                   maxLength={100}
                   autoComplete="new-password"
                 />
+                <small>在网易邮箱网页端「设置 → POP3/SMTP/IMAP」中新增授权密码。</small>
               </label>
               <button disabled={!!busy}>保存并重试</button>
             </form>
@@ -333,7 +354,7 @@ function MailSettings({
         <div className="connection-empty">
           <Mail size={28} />
           <h3>连接第一个邮箱</h3>
-          <p>同步后，往来邮件会出现在对应公司与联系人的档案中。</p>
+          <p>打开连接表单，查看如何开通网易邮箱的 IMAP/SMTP 服务并取得客户端授权码。</p>
           <button onClick={() => setAdding(true)}>连接邮箱</button>
         </div>
       )}
